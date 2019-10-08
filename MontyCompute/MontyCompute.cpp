@@ -1,12 +1,14 @@
 // MontyCompute.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include <GL/glew.h>
+//#include <GL/glew.h>
+#include "glad/glad.h"
 #include <GLFW/glfw3.h>
-#include <GL/GLU.h>
-#include <gl/gl.h>
+//#include <GL/GLU.h>
+//#include <gl/gl.h>
 #include <stdio.h>
 
+#include <stdlib.h>  
 //const GLchar* fragShader =
 
 #define GL_MAX_TEXTURE_SIZE 1024
@@ -39,7 +41,14 @@ const GLchar* fragShader =
 
 "void main()\n"\
 "{\n"\
-"	res = int(s)%3;\n"\
+"int num = int(s);\n"\
+"int decision = (num & 0xff)%2;\n"\
+"int correctdoor = ((num >> 8) & 0xff)%3;\n"\
+"int chosendoor = ((num >> 16) & 0xff)%3;\n"\
+"int r = 0;\n"\
+"if (correctdoor == chosendoor) r = r + 1;\n"\
+"if (decision == 1) r = r + 2;\n"\
+"	res = r;\n"\
 "}\n";
 static const GLfloat g_vertex_buffer_data[] = {
 	-1.0f, -1.0f, 0.0f, 100.0f,
@@ -56,6 +65,7 @@ int main()
 	GLuint renderedTexture;
 	GLFWwindow* window;
 	GLuint framebuffer=0;
+	GLuint VertexArray;
 	if (!glfwInit())
 	{
 		printf("GLFW3 failed to initalize\n");
@@ -70,11 +80,12 @@ int main()
 
 	window = glfwCreateWindow(1024, 1024, "MontyCompute", NULL, NULL);
 	glfwMakeContextCurrent(window);
-	if (glewInit() != GLEW_OK)
-	{
-		printf("Glew failed to initalize\n");
-		return -1;
-	}
+	gladLoadGL();
+//	if (glewInit() != GLEW_OK)
+	//{
+	//	printf("Glew failed to initalize\n");
+	//	return -1;
+	//}
 
 	//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -123,7 +134,9 @@ int main()
 	glUseProgram(ProgramID);
 	glGenBuffers(1, &VertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_DYNAMIC_DRAW);
+	glGenVertexArrays(1, &VertexArray);
+	glBindVertexArray(VertexArray);
 	glVertexAttribPointer(
 		0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 		3,                  // size
@@ -143,7 +156,20 @@ int main()
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	GLchar *resultframe = new GLchar[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE];
+
+	int r0 = 0;
+	int r1 = 0;
+	int r2 = 0;
+	int r3 = 0;
 	while (1) {
+		float* p = (float*) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		p[3] = (float) rand();
+		p[7] = (float)rand();
+		p[11] = (float)rand();
+		p[15] = (float)rand();
+		p[19] = (float)rand();
+		p[23] = (float)rand();
+		glUnmapBuffer(GL_ARRAY_BUFFER);
 		//glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -153,11 +179,14 @@ int main()
 		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_BYTE, resultframe);
 	//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
 		for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE); i++) {
-
-					printf("Res = %.2x\n", resultframe[i]);
+			//if (resultframe[i] == 0) r0++;
+			if (resultframe[i] == 1) r1++;
+			if (resultframe[i] == 2) r2++;
+			//if (resultframe[i] == 3) r3++;
 		//	if (resultframe[i] != 77)
 			//	printf("fail\n");
 		}
+		printf("Res won no change: %d  won change: %d total %d\n", r1,r2,r1+r2);
 
 		//		printf("Res = %.8x\n", resultframe[i]);
 	}
