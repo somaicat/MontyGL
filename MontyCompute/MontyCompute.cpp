@@ -11,7 +11,7 @@
 #include <stdlib.h>  
 //const GLchar* fragShader =
 
-#define GL_MAX_TEXTURE_SIZE 1024
+#define GL_MAX_TEXTURE_SIZE 512
 const GLchar* vertShader = 
 "#version 140\n"\
 "in vec3 pos;\n"\
@@ -50,7 +50,7 @@ const GLchar* fragShader =
 "if (decision == 1) r = r + 2;\n"\
 "	res = r;\n"\
 "}\n";
-static const GLfloat g_vertex_buffer_data[] = {
+ GLfloat g_vertex_buffer_data[] = {
 	-1.0f, -1.0f, 0.0f, 100.0f,
 	 1.0f, -1.0f, 0.0f, 20000.0f,
 	 -1.0f,  1.0f, 0.0f, 34312.0f,
@@ -161,21 +161,23 @@ int main()
 	int r1 = 0;
 	int r2 = 0;
 	int r3 = 0;
+	int l = 0;
 	while (1) {
-		float* p = (float*) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		float* p = (float*)g_vertex_buffer_data;
 		p[3] = (float) rand();
 		p[7] = (float)rand();
 		p[11] = (float)rand();
 		p[15] = (float)rand();
 		p[19] = (float)rand();
 		p[23] = (float)rand();
-		glUnmapBuffer(GL_ARRAY_BUFFER);
+		//glUnmapBuffer(GL_ARRAY_BUFFER);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
 		//glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		glfwSwapBuffers(window);
-
-		glfwPollEvents();
+	//	glfwSwapBuffers(window);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		//glfwPollEvents();
 		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_BYTE, resultframe);
 	//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
 		for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE); i++) {
@@ -186,7 +188,8 @@ int main()
 		//	if (resultframe[i] != 77)
 			//	printf("fail\n");
 		}
-		printf("Res won no change: %d  won change: %d total %d\n", r1,r2,r1+r2);
+		//if ((++l % 1000) == 0)
+			printf("Res won no change: %d  won change: %d total %d\n", r1,r2,r1+r2);
 
 		//		printf("Res = %.8x\n", resultframe[i]);
 	}
