@@ -9,12 +9,24 @@
 
 //const GLchar* fragShader =
 
-
+#define GL_MAX_TEXTURE_SIZE 1024
 const GLchar* vertShader = 
 "#version 140\n"\
 "in vec3 pos;\n"\
 "in float iseed;\n"\
-"flat out int s;\n"\
+"out float s;\n"\
+
+"void main()\n"\
+"{\n"\
+"	gl_Position.xyz = pos;\n"\
+"   gl_Position.w = 1.0;\n"\
+"	s = iseed;\n"\
+"}\n";
+const GLchar* fragShader =
+"#version 140\n"\
+"in float s;\n"\
+"out int res;\n"\
+
 "int wang_hash(int seed)\n"\
 "{\n"\
 "	seed = (seed ^ 61) ^ (seed >> 16);\n"\
@@ -24,30 +36,19 @@ const GLchar* vertShader =
 "	seed = seed ^ (seed >> 15);\n"\
 "	return seed;\n"\
 "}\n"\
-"void main()\n"\
-"{\n"\
-"	gl_Position.xyz = pos;\n"\
-"   gl_Position.w = 1.0;\n"\
-"	s = wang_hash(int(iseed));\n"\
-"}\n";
-const GLchar* fragShader =
-"#version 140\n"\
-"flat in int s;\n"\
-"out int res;\n"\
 
 "void main()\n"\
 "{\n"\
-"float sf = float(s);"\
-"	res=74;\n"\
+"	res = int(s)%3;\n"\
 "}\n";
 static const GLfloat g_vertex_buffer_data[] = {
-	-1.0f, -1.0f, 0.0f, 1.0f,
-	 1.0f, -1.0f, 0.0f, 2.0f,
-	 -1.0f,  1.0f, 0.0f, 3.0f,
+	-1.0f, -1.0f, 0.0f, 100.0f,
+	 1.0f, -1.0f, 0.0f, 20000.0f,
+	 -1.0f,  1.0f, 0.0f, 34312.0f,
 
-	 -1.0f,  1.0f, 0.0f, 4.0f,
-	 1.0f, -1.0f, 0.0f, 5.0f,
-	 1.0f,  1.0f, 0.0f, 6.0f
+	 -1.0f,  1.0f, 0.0f, 2653626.0f,
+	 1.0f, -1.0f, 0.0f, 12363.0f,
+	 1.0f,  1.0f, 0.0f, 1643.0f
 };
 int main()
 {
@@ -102,7 +103,7 @@ int main()
 
 	glGenTextures(1, &renderedTexture);
 	glBindTexture(GL_TEXTURE_2D, renderedTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, 1024, 1024, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0);
 
 	glViewport(0, 0, 1024, 1024);
 
@@ -141,7 +142,7 @@ int main()
 	);
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	GLuint *resultframe = new GLuint[1024 * 1024];
+	GLchar *resultframe = new GLchar[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE];
 	while (1) {
 		//glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -149,9 +150,16 @@ int main()
 		glfwSwapBuffers(window);
 
 		glfwPollEvents();
-		glReadPixels(0, 0, 1024, 1024, GL_RED_INTEGER, GL_UNSIGNED_BYTE, resultframe);
+		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_BYTE, resultframe);
 	//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
-		printf("Res = %.8x\n", resultframe[0]);
+		for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE); i++) {
+
+					printf("Res = %.2x\n", resultframe[i]);
+		//	if (resultframe[i] != 77)
+			//	printf("fail\n");
+		}
+
+		//		printf("Res = %.8x\n", resultframe[i]);
 	}
 
 }
