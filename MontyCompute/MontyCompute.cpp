@@ -80,7 +80,7 @@ int main()
 
 	window = glfwCreateWindow(1024, 1024, "MontyCompute", NULL, NULL);
 	glfwMakeContextCurrent(window);
-	gladLoadGL();
+	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 //	if (glewInit() != GLEW_OK)
 	//{
 	//	printf("Glew failed to initalize\n");
