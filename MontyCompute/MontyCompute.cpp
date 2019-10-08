@@ -11,7 +11,7 @@
 #include <stdlib.h>  
 //const GLchar* fragShader =
 
-#define GL_MAX_TEXTURE_SIZE 512
+#define GL_MAX_TEXTURE_SIZE 1024
 const GLchar* vertShader = 
 "#version 140\n"\
 "in vec3 pos;\n"\
@@ -116,7 +116,7 @@ int main()
 	glBindTexture(GL_TEXTURE_2D, renderedTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0);
 
-	glViewport(0, 0, 1024, 1024);
+	glViewport(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE);
 
 	glGenFramebuffers(1, &framebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -155,6 +155,8 @@ int main()
 	);
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	GLuint pbo;
+	glGenBuffers(1, &pbo);
 	GLchar *resultframe = new GLchar[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE];
 
 	int r0 = 0;
@@ -170,6 +172,7 @@ int main()
 		p[15] = (float)rand();
 		p[19] = (float)rand();
 		p[23] = (float)rand();
+		
 		//glUnmapBuffer(GL_ARRAY_BUFFER);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
 		//glClear(GL_COLOR_BUFFER_BIT);
