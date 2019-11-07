@@ -47,11 +47,12 @@ const GLchar* fragShader =
 "void main()\n"\
 "{\n"\
 "vec4 samp = texture(ourTexture,uvOut);\n"\
-"vec4 e = vec4(0.0f,0.0f,0.0f,0.0f);\n"\
-"e.a = s;\n"\
-"e.r = float(wang_hash((int(s))));\n"\
-"e.b = samp.a;\n"\
-"res = vec4(0.4f,0.6f,0.6f,1.0f);\n"\
+//"vec4 e = vec4(0.0f,0.0f,0.0f,0.0f);\n"\
+//"e.a = s;\n"\
+//"e.r = float(wang_hash((int(s))));\n"\
+//"e.b = samp.a;\n"\
+
+"res = samp+0.2;\n"\
 /*"int num = int(s);\n"\
 "int decision = (num & 0xff)%2;\n"\
 "int correctdoor = ((num >> 8) & 0xff)%3;\n"\
@@ -109,18 +110,6 @@ GLuint SetupShader(const GLchar* const* buf, GLenum type) {
 	GLuint error;
 	if ((error = glGetError()) != GL_NO_ERROR) 
 		exit(-1);
-	return shader;
-}
-GLuint LinkShaders(const GLuint vertShader, const GLuint fragShader) {
-	GLchar data[512];
-	GLuint shader = glCreateProgram();
-	glAttachShader(shader, vertShader);
-	glAttachShader(shader, fragShader);
-	glLinkProgram(shader);
-
-	glGetProgramInfoLog(shader, sizeof(data), NULL, data);
-	printf("%s\n", data);
-	if (glGetError() != GL_NO_ERROR) exit(-1);
 	return shader;
 }
 void SetupTexture(const GLuint tex) {
@@ -201,13 +190,24 @@ int main()
 
 	VertexShader = SetupShader(&vertShader, GL_VERTEX_SHADER);
 	FragmentShader = SetupShader(&fragShader, GL_FRAGMENT_SHADER);
-	Shader = LinkShaders(VertexShader, FragmentShader);
-	glBindAttribLocation(Shader, 0, "pos");
-	glBindAttribLocation(Shader, 1, "iseed");
-	glBindAttribLocation(Shader, 2, "uv");
-	glUseProgram(Shader);
-	GLint texSampler = glGetUniformLocation(Shader, "ourTexture");
+	GLchar data[512];
+	GLuint shader = glCreateProgram();
+	glAttachShader(shader, VertexShader);
+	glAttachShader(shader, FragmentShader);
+	glBindAttribLocation(shader, 0, "pos");
+	glBindAttribLocation(shader, 1, "iseed");
+	glBindAttribLocation(shader, 2, "uv");
+
+	glLinkProgram(shader);
+
+	glGetProgramInfoLog(shader, sizeof(data), NULL, data);
+	printf("%s\n", data);
+	if (glGetError() != GL_NO_ERROR) exit(-1);
+
+	GLint texSampler = glGetUniformLocation(shader, "ourTexture");
 	glUniform1i(texSampler, 0);
+	glUseProgram(shader);
+
 	glGenTextures(2, renderedTexture);
 
 	SetupTexture(renderedTexture[0]);
