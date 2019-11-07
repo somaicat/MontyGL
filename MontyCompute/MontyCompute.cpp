@@ -47,13 +47,11 @@ const GLchar* fragShader =
 "void main()\n"\
 "{\n"\
 "vec4 samp = texture(ourTexture,uvOut);\n"\
-//"samp = samp+0.1;"
-//"vec4 e = vec4(0.2f,0.2f,0.2f,1.0f);\n"\
-//"e.a = s;\n"\
-//"e.r = float(wang_hash((int(s))));\n"\
-//"e.b = samp.a;\n"\
-
-"res = samp+0.2;\n"\
+"vec4 e = vec4(0.0f,0.0f,0.0f,0.0f);\n"\
+"e.a = s;\n"\
+"e.r = float(wang_hash((int(s))));\n"\
+"e.b = samp.a;\n"\
+"res = vec4(0.4f,0.6f,0.6f,1.0f);\n"\
 /*"int num = int(s);\n"\
 "int decision = (num & 0xff)%2;\n"\
 "int correctdoor = ((num >> 8) & 0xff)%3;\n"\
@@ -96,8 +94,7 @@ void FlipTextures() {
 		activeFBO = 1;
 	else activeFBO = 0;
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[activeFBO], 0);
-	//glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[activeFBO]);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[activeFBO]);
 }
 
 GLuint SetupShader(const GLchar* const* buf, GLenum type) {
@@ -114,9 +111,9 @@ GLuint SetupShader(const GLchar* const* buf, GLenum type) {
 		exit(-1);
 	return shader;
 }
-GLuint LinkShaders(const GLuint program, const GLuint vertShader, const GLuint fragShader) {
+GLuint LinkShaders(const GLuint vertShader, const GLuint fragShader) {
 	GLchar data[512];
-	GLuint shader = program;
+	GLuint shader = glCreateProgram();
 	glAttachShader(shader, vertShader);
 	glAttachShader(shader, fragShader);
 	glLinkProgram(shader);
@@ -127,10 +124,10 @@ GLuint LinkShaders(const GLuint program, const GLuint vertShader, const GLuint f
 	return shader;
 }
 void SetupTexture(const GLuint tex) {
-	//glActiveTexture(GL_TEXTURE0);
+	//glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RGBA, GL_FLOAT, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
 }
 GLuint SetupVertexArray(GLfloat *buf, GLuint len) {
 	GLuint VertexBuffer;
@@ -189,7 +186,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-//	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
 	window = glfwCreateWindow(1024, 1024, "MontyCompute", NULL, NULL);
 	glfwMakeContextCurrent(window);
@@ -204,23 +201,19 @@ int main()
 
 	VertexShader = SetupShader(&vertShader, GL_VERTEX_SHADER);
 	FragmentShader = SetupShader(&fragShader, GL_FRAGMENT_SHADER);
-	Shader = glCreateProgram();
+	Shader = LinkShaders(VertexShader, FragmentShader);
 	glBindAttribLocation(Shader, 0, "pos");
 	glBindAttribLocation(Shader, 1, "iseed");
 	glBindAttribLocation(Shader, 2, "uv");
-	LinkShaders(Shader, VertexShader, FragmentShader);
 	glUseProgram(Shader);
 	GLint texSampler = glGetUniformLocation(Shader, "ourTexture");
-	//auto error = glGetError();
 	glUniform1i(texSampler, 0);
-	
 	glGenTextures(2, renderedTexture);
 
 	SetupTexture(renderedTexture[0]);
 	SetupTexture(renderedTexture[1]);
 	glViewport(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE);
-//	SetupFramebuffers();
-
+	SetupFramebuffers();
 	//glGenFramebuffers(1, &framebuffer);
 	//glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[0], 0);
@@ -248,15 +241,13 @@ int main()
 	int r3 = 0;
 	int l = 0;
 
-	//auto error = glGetError();
+	auto error = glGetError();
 	while (1) {
 		FlipTextures();
 	//	auto error = glGetError();
 		//glUnmapBuffer(GL_ARRAY_BUFFER);
 	//	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
 		//glClear(GL_COLOR_BUFFER_BIT);
-
-		//glBindTexture(GL_TEXTURE_2D, 0);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		//glBindTexture(GL_TEXTURE_2D, 0);
