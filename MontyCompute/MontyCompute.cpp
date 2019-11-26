@@ -89,12 +89,13 @@ void SetupFramebuffers() {
 void FlipTextures() {
 //	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, renderedTexture[activeFBO]);
+	printf("Bound texture %d\n", activeFBO);
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_2D, renderedTexture)
 	if (activeFBO == 0)
 		activeFBO = 1;
 	else activeFBO = 0;
-
+	printf("Bound Framebuffer %d\n", activeFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[activeFBO]);
 }
 
@@ -116,6 +117,8 @@ void SetupTexture(const GLuint tex) {
 	//glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	//glBindTexture(GL_TEXTURE_2D, 0);
 }
 GLuint SetupVertexArray(GLfloat *buf, GLuint len) {
@@ -252,6 +255,7 @@ int main()
 
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		//glfwPollEvents();
+		printf("printing pixels of FB %d\n", activeFBO);
 		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RGBA, GL_FLOAT, resultframe);
 		//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
 	//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
