@@ -31,9 +31,9 @@ const GLchar* fragShader =
 "#version 140\n"\
 "in float s;\n"\
 "in vec2 uvOut;\n"
-"out vec4 res;\n"\
+"out uvec4 res;\n"\
 
-"uniform sampler2D ourTexture;\n"\
+"uniform usampler2D ourTexture;\n"\
 "int wang_hash(int seed)\n"\
 "{\n"\
 "	seed = (seed ^ 61) ^ (seed >> 16);\n"\
@@ -46,13 +46,15 @@ const GLchar* fragShader =
 
 "void main()\n"\
 "{\n"\
-"vec4 samp = texture(ourTexture,uvOut);\n"\
+"uvec4 samp = texture(ourTexture,uvOut);\n"\
 //"vec4 e = vec4(0.0f,0.0f,0.0f,0.0f);\n"\
 //"e.a = s;\n"\
 //"e.r = float(wang_hash((int(s))));\n"\
 //"e.b = samp.a;\n"\
 
-"res = samp+0.2;\n"\
+"res = uvec4(5,5,5,5);\n"\
+//"res = samp;\n"\
+
 /*"int num = int(s);\n"\
 "int decision = (num & 0xff)%2;\n"\
 "int correctdoor = ((num >> 8) & 0xff)%3;\n"\
@@ -116,7 +118,7 @@ GLuint SetupShader(const GLchar* const* buf, GLenum type) {
 void SetupTexture(const GLuint tex) {
 	//glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	//glBindTexture(GL_TEXTURE_2D, 0);
@@ -237,7 +239,7 @@ int main()
 	p[23] = (float)rand();
 	*/
 	VertexArray = SetupVertexArray(g_vertex_buffer_data, sizeof(g_vertex_buffer_data));
-	GLfloat* resultframe = new GLfloat[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4];
+	GLfloat* resultframe = new GLfloat[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*sizeof(GLuint)];
 	int r0 = 0;
 	int r1 = 0;
 	int r2 = 0;
@@ -256,11 +258,11 @@ int main()
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		//glfwPollEvents();
 		printf("printing pixels of FB %d\n", activeFBO);
-		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RGBA, GL_FLOAT, resultframe);
+		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RGBA_INTEGER, GL_UNSIGNED_INT, resultframe);
 		//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
 	//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
 		int i = 0;
-			printf("%f %f %f %f\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
+			printf("%u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
 			getchar();
 			//if (resultframe[i] == 0) r0++;
 			//if (resultframe[i] == 1) r1++;
