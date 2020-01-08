@@ -31,7 +31,10 @@ const GLchar* fragShader =
 "#version 140\n"\
 "in float s;\n"\
 "in vec2 uvOut;\n"
-"out uvec4 res;\n"\
+"out uint c0;\n"\
+"out uint c1;\n"\
+"out uint c2;\n"\
+"out uint c3;\n"\
 
 "uniform usampler2D ourTexture;\n"\
 "int wang_hash(int seed)\n"\
@@ -52,7 +55,10 @@ const GLchar* fragShader =
 //"e.r = float(wang_hash((int(s))));\n"\
 //"e.b = samp.a;\n"\
 
-"res = uvec4(5,5,5,5);\n"\
+"c0 = uint(47);\n"\
+"c1 = uint(2);\n"\
+"c2 = uint(3);\n"\
+"c3 = uint(4);\n"\
 //"res = samp;\n"\
 
 /*"int num = int(s);\n"\
@@ -74,7 +80,7 @@ GLfloat g_vertex_buffer_data[] = {
 	1.0f,  1.0f, 0.0f, 1643.0f,1.0f,1.0f
 };
 
-GLuint renderedTexture[2];
+GLuint renderedTexture[2][4];
 GLuint framebuffers[2];
 GLuint activeFBO=0;
 void SetupFramebuffers() {
@@ -82,16 +88,28 @@ void SetupFramebuffers() {
 	glGenFramebuffers(2, framebuffers);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[0]);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[0], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[0][0], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderedTexture[0][1], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderedTexture[0][2], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, renderedTexture[0][3], 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[1]);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[1], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[1][0], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderedTexture[1][1], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderedTexture[1][2], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, renderedTexture[1][3], 0);
 
 }
 void FlipTextures() {
-//	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, renderedTexture[activeFBO]);
-	printf("Bound texture %d\n", activeFBO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, renderedTexture[activeFBO][0]);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, renderedTexture[activeFBO][1]);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, renderedTexture[activeFBO][2]);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, renderedTexture[activeFBO][3]);
+	printf("Bound textures %d\n", activeFBO);
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_2D, renderedTexture)
 	if (activeFBO == 0)
@@ -99,6 +117,11 @@ void FlipTextures() {
 	else activeFBO = 0;
 	printf("Bound Framebuffer %d\n", activeFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[activeFBO]);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[activeFBO][0], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderedTexture[activeFBO][1], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderedTexture[activeFBO][2], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, renderedTexture[activeFBO][3], 0);
 }
 
 GLuint SetupShader(const GLchar* const* buf, GLenum type) {
@@ -115,13 +138,17 @@ GLuint SetupShader(const GLchar* const* buf, GLenum type) {
 		exit(-1);
 	return shader;
 }
-void SetupTexture(const GLuint tex) {
-	//glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glBindTexture(GL_TEXTURE_2D, 0);
+void SetupTextures() {
+	glActiveTexture(GL_TEXTURE0);
+	for (int i = 0; i < 2; i++) {
+		for (int v = 0; v < 4; v++) {
+			glBindTexture(GL_TEXTURE_2D, renderedTexture[i][v]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+	}
 }
 GLuint SetupVertexArray(GLfloat *buf, GLuint len) {
 	GLuint VertexBuffer;
@@ -202,21 +229,23 @@ int main()
 	glBindAttribLocation(shader, 0, "pos");
 	glBindAttribLocation(shader, 1, "iseed");
 	glBindAttribLocation(shader, 2, "uv");
-
+	glBindFragDataLocation(shader, 0, "c0");
+	glBindFragDataLocation(shader, 1, "c1");
+	glBindFragDataLocation(shader, 2, "c2");
+	glBindFragDataLocation(shader, 3, "c3");
 	glLinkProgram(shader);
 
 	glGetProgramInfoLog(shader, sizeof(data), NULL, data);
 	printf("%s\n", data);
 	if (glGetError() != GL_NO_ERROR) exit(-1);
 
-	GLint texSampler = glGetUniformLocation(shader, "ourTexture");
-	glUniform1i(texSampler, 0);
+//	GLint texSampler = glGetUniformLocation(shader, "ourTexture");
+//	glUniform1i(texSampler, 0);
 	glUseProgram(shader);
 
-	glGenTextures(2, renderedTexture);
-
-	SetupTexture(renderedTexture[0]);
-	SetupTexture(renderedTexture[1]);
+	glGenTextures(4, renderedTexture[0]);
+	glGenTextures(4, renderedTexture[1]);
+	SetupTextures();
 	glViewport(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE);
 	SetupFramebuffers();
 	//glGenFramebuffers(1, &framebuffer);
@@ -239,13 +268,13 @@ int main()
 	p[23] = (float)rand();
 	*/
 	VertexArray = SetupVertexArray(g_vertex_buffer_data, sizeof(g_vertex_buffer_data));
-	GLfloat* resultframe = new GLfloat[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*sizeof(GLuint)];
+	GLuint* resultframe = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*sizeof(GLuint)];
 	int r0 = 0;
 	int r1 = 0;
 	int r2 = 0;
 	int r3 = 0;
 	int l = 0;
-
+    
 	auto error = glGetError();
 	while (1) {
 		FlipTextures();
@@ -258,11 +287,22 @@ int main()
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		//glfwPollEvents();
 		printf("printing pixels of FB %d\n", activeFBO);
-		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RGBA_INTEGER, GL_UNSIGNED_INT, resultframe);
 		//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
 	//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
 		int i = 0;
-			printf("%u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
+
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
+			printf("0: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
+			glReadBuffer(GL_COLOR_ATTACHMENT1);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
+			printf("1: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
+			glReadBuffer(GL_COLOR_ATTACHMENT2);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
+			printf("2: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
+			glReadBuffer(GL_COLOR_ATTACHMENT3);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
+			printf("3: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
 			getchar();
 			//if (resultframe[i] == 0) r0++;
 			//if (resultframe[i] == 1) r1++;
