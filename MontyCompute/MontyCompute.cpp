@@ -35,13 +35,13 @@ const GLchar* fragShader =
 "out uint c1;\n"\
 "out uint c2;\n"\
 "out uint c3;\n"\
-"out uint randOut;\n"\
+"out int randOut;\n"\
 
 "uniform usampler2D t0;\n"\
 "uniform usampler2D t1;\n"\
 "uniform usampler2D t2;\n"\
 "uniform usampler2D t3;\n"\
-"uniform usampler2D randTex;\n"\
+"uniform isampler2D randTex;\n"\
 
 "int wang_hash(int seed)\n"\
 "{\n"\
@@ -60,27 +60,18 @@ const GLchar* fragShader =
 "uint doorsWonChanged = uint(texture(t1,uvOut));\n"\
 "uint doorsLostKept = uint(texture(t2,uvOut));\n"\
 "uint doorsLostChanged = uint(texture(t3,uvOut));\n"\
-/*
-"uint rand;\n"\
-"if (doorsWonKept == 0U &&doorsWonChanged == 0U&& doorsLostKept== 0u && doorsLostChanged== 0u) { \n"\*/
-//"rand = (doorsWonKept == 0 &&doorsWonChanged && doorsLostKept==0 && doorsLostChanged==0) ? wang_hash((int(s))) :  wang_hash((int(doorsWonKept+doorsWonChanged+doorsLostKept+doorsLostChanged)));\n"\
-
-//"\n"\
-//"}\n"\
-
-//"vec4 e = vec4(0.0f,0.0f,0.0f,0.0f);\n"\
-//"e.a = s;\n"\
-//"e.r = float(wang_hash((int(s))));\n"\
-//"e.b = samp.a;\n"\
-
-//"s1++;\n"\
-
-"c0 = uint(texture(randTex,uvOut));\n"\
-"c1 = uint(wang_hash(int(s)));\n"\
-"c2 = uint(wang_hash(int(s)));\n"\
+"int rand1 = wang_hash(int(texture(randTex,uvOut)));\n"\
+"int rand2 = wang_hash(rand1);\n"\
+"int rand3 = wang_hash(rand2);\n"\
+"int chosenDoor = rand1 % 3;\n"\
+"int correctDoor = rand2 % 3;\n"\
+"int decision = rand3 % 2;\n"\
+"c0 = uint(chosenDoor);\n"\
+"c1 = uint(correctDoor);\n"\
+"c2 = uint(decision);\n"\
 "c3 = uint(wang_hash(int(s)));\n"\
 
-"randOut = uint(texture(randTex,uvOut));\n"\
+"randOut = wang_hash(rand3);\n"\
 //"res = samp;\n"\
 
 /*"int num = int(s);\n"\
@@ -106,8 +97,8 @@ GLuint renderedTexture[2][4];
 GLuint randTex[2];
 GLuint framebuffers[2];
 GLuint activeFBO=0;
-GLuint *GenRandTex() {
-	static GLuint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*sizeof(GLuint)];
+GLint *GenRandTex() {
+	static GLint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*sizeof(GLint)];
 	static bool firstcall = true;
 	if (!firstcall) return buf;
 	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
@@ -185,7 +176,7 @@ void SetupTextures() {
 
 	for (int i = 0; i < 2; i++) {
 		glBindTexture(GL_TEXTURE_2D, randTex[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, GenRandTex());
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_INT, GenRandTex());
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		for (int v = 0; v < 4; v++) {
@@ -366,7 +357,7 @@ int main()
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
 			printf("3: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
 			glReadBuffer(GL_COLOR_ATTACHMENT4);
-			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, resultframe);
 			printf("rand: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
 			getchar();
 			//if (resultframe[i] == 0) r0++;
