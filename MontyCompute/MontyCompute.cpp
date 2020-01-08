@@ -35,8 +35,14 @@ const GLchar* fragShader =
 "out uint c1;\n"\
 "out uint c2;\n"\
 "out uint c3;\n"\
+"out uint randOut;\n"\
 
-"uniform usampler2D ourTexture;\n"\
+"uniform usampler2D t0;\n"\
+"uniform usampler2D t1;\n"\
+"uniform usampler2D t2;\n"\
+"uniform usampler2D t3;\n"\
+"uniform usampler2D randTex;\n"\
+
 "int wang_hash(int seed)\n"\
 "{\n"\
 "	seed = (seed ^ 61) ^ (seed >> 16);\n"\
@@ -49,16 +55,32 @@ const GLchar* fragShader =
 
 "void main()\n"\
 "{\n"\
-"uvec4 samp = texture(ourTexture,uvOut);\n"\
+
+"uint doorsWonKept = uint(texture(t0,uvOut));\n"\
+"uint doorsWonChanged = uint(texture(t1,uvOut));\n"\
+"uint doorsLostKept = uint(texture(t2,uvOut));\n"\
+"uint doorsLostChanged = uint(texture(t3,uvOut));\n"\
+/*
+"uint rand;\n"\
+"if (doorsWonKept == 0U &&doorsWonChanged == 0U&& doorsLostKept== 0u && doorsLostChanged== 0u) { \n"\*/
+//"rand = (doorsWonKept == 0 &&doorsWonChanged && doorsLostKept==0 && doorsLostChanged==0) ? wang_hash((int(s))) :  wang_hash((int(doorsWonKept+doorsWonChanged+doorsLostKept+doorsLostChanged)));\n"\
+
+//"\n"\
+//"}\n"\
+
 //"vec4 e = vec4(0.0f,0.0f,0.0f,0.0f);\n"\
 //"e.a = s;\n"\
 //"e.r = float(wang_hash((int(s))));\n"\
 //"e.b = samp.a;\n"\
 
-"c0 = uint(47);\n"\
-"c1 = uint(2);\n"\
-"c2 = uint(3);\n"\
-"c3 = uint(4);\n"\
+//"s1++;\n"\
+
+"c0 = uint(texture(randTex,uvOut));\n"\
+"c1 = uint(wang_hash(int(s)));\n"\
+"c2 = uint(wang_hash(int(s)));\n"\
+"c3 = uint(wang_hash(int(s)));\n"\
+
+"randOut = uint(texture(randTex,uvOut));\n"\
 //"res = samp;\n"\
 
 /*"int num = int(s);\n"\
@@ -81,8 +103,19 @@ GLfloat g_vertex_buffer_data[] = {
 };
 
 GLuint renderedTexture[2][4];
+GLuint randTex[2];
 GLuint framebuffers[2];
 GLuint activeFBO=0;
+GLuint *GenRandTex() {
+	static GLuint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*sizeof(GLuint)];
+	static bool firstcall = true;
+	if (!firstcall) return buf;
+	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
+		buf[i] = rand();
+	}
+	firstcall = false;
+	return buf; // NOTE: as a static, this is legal, although obviously not thread safe
+}
 void SetupFramebuffers() {
 
 	glGenFramebuffers(2, framebuffers);
@@ -92,14 +125,19 @@ void SetupFramebuffers() {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderedTexture[0][1], 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderedTexture[0][2], 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, renderedTexture[0][3], 0);
-	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
-	glDrawBuffers(4, DrawBuffers);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, randTex[0], 0);
+
+	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3,GL_COLOR_ATTACHMENT4 };
+	glDrawBuffers(5, DrawBuffers);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[1]);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[1][0], 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderedTexture[1][1], 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderedTexture[1][2], 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, renderedTexture[1][3], 0);
-	glDrawBuffers(4, DrawBuffers);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, randTex[1], 0);
+	glDrawBuffers(5, DrawBuffers);
 }
 void FlipTextures() {
 	glActiveTexture(GL_TEXTURE0);
@@ -110,6 +148,8 @@ void FlipTextures() {
 	glBindTexture(GL_TEXTURE_2D, renderedTexture[activeFBO][2]);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, renderedTexture[activeFBO][3]);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, randTex[activeFBO]);
 	printf("Bound textures %d\n", activeFBO);
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_2D, renderedTexture)
@@ -140,16 +180,23 @@ GLuint SetupShader(const GLchar* const* buf, GLenum type) {
 	return shader;
 }
 void SetupTextures() {
+	GenRandTex();
 	glActiveTexture(GL_TEXTURE0);
+
 	for (int i = 0; i < 2; i++) {
+		glBindTexture(GL_TEXTURE_2D, randTex[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, GenRandTex());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		for (int v = 0; v < 4; v++) {
 			glBindTexture(GL_TEXTURE_2D, renderedTexture[i][v]);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 GLuint SetupVertexArray(GLfloat *buf, GLuint len) {
 	GLuint VertexBuffer;
@@ -234,16 +281,29 @@ int main()
 	glBindFragDataLocation(shader, 1, "c1");
 	glBindFragDataLocation(shader, 2, "c2");
 	glBindFragDataLocation(shader, 3, "c3");
+	glBindFragDataLocation(shader, 4, "randOut");
 	glLinkProgram(shader);
 
 	glGetProgramInfoLog(shader, sizeof(data), NULL, data);
 	printf("%s\n", data);
 	if (glGetError() != GL_NO_ERROR) exit(-1);
 
-//	GLint texSampler = glGetUniformLocation(shader, "ourTexture");
-//	glUniform1i(texSampler, 0);
 	glUseProgram(shader);
 
+	GLint texSampler = glGetUniformLocation(shader, "t0");
+	glUniform1i(texSampler, 0);
+	texSampler = glGetUniformLocation(shader, "t1");
+	glUniform1i(texSampler, 1);
+	texSampler = glGetUniformLocation(shader, "t2");
+	glUniform1i(texSampler, 2);
+	texSampler = glGetUniformLocation(shader, "t3");
+	glUniform1i(texSampler, 3);
+
+    texSampler = glGetUniformLocation(shader, "randTex");
+	glUniform1i(texSampler, 4);
+
+
+	glGenTextures(2, randTex);
 	glGenTextures(4, renderedTexture[0]);
 	glGenTextures(4, renderedTexture[1]);
 	SetupTextures();
@@ -305,6 +365,9 @@ int main()
 			glReadBuffer(GL_COLOR_ATTACHMENT3);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
 			printf("3: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
+			glReadBuffer(GL_COLOR_ATTACHMENT4);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
+			printf("rand: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
 			getchar();
 			//if (resultframe[i] == 0) r0++;
 			//if (resultframe[i] == 1) r1++;
