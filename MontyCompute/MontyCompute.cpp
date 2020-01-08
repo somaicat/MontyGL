@@ -96,9 +96,9 @@ GLfloat g_vertex_buffer_data[] = {
 GLuint renderedTexture[2][4];
 GLuint randTex[2];
 GLuint framebuffers[2];
-GLuint activeFBO=0;
-GLint *GenRandTex() {
-	static GLint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*sizeof(GLint)];
+GLuint activeFBO = 0;
+GLint* GenRandTex() {
+	static GLint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLint)];
 	static bool firstcall = true;
 	if (!firstcall) return buf;
 	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
@@ -141,13 +141,13 @@ void FlipTextures() {
 	glBindTexture(GL_TEXTURE_2D, renderedTexture[activeFBO][3]);
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, randTex[activeFBO]);
-	printf("Bound textures %d\n", activeFBO);
+	//printf("Bound textures %d\n", activeFBO);
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_2D, renderedTexture)
 	if (activeFBO == 0)
 		activeFBO = 1;
 	else activeFBO = 0;
-	printf("Bound Framebuffer %d\n", activeFBO);
+	//printf("Bound Framebuffer %d\n", activeFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[activeFBO]);
 	/* Doesn't seem to be needed
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[activeFBO][0], 0);
@@ -161,12 +161,12 @@ GLuint SetupShader(const GLchar* const* buf, GLenum type) {
 	GLuint shader = glCreateShader(type);
 	const char* typeStr = (type == GL_VERTEX_SHADER) ? "vertex" : "fragment"; // quick and dirty solution to display type of shader in output.
 	glShaderSource(shader, 1, buf, nullptr);
-	printf("Compiling %s shader...\n",typeStr);
+	printf("Compiling %s shader...\n", typeStr);
 	glCompileShader(shader);
 	glGetShaderInfoLog(shader, sizeof(data), NULL, data);
 	printf("%s\n", data);
 	GLuint error;
-	if ((error = glGetError()) != GL_NO_ERROR) 
+	if ((error = glGetError()) != GL_NO_ERROR)
 		exit(-1);
 	return shader;
 }
@@ -189,7 +189,7 @@ void SetupTextures() {
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
-GLuint SetupVertexArray(GLfloat *buf, GLuint len) {
+GLuint SetupVertexArray(GLfloat* buf, GLuint len) {
 	GLuint VertexBuffer;
 	GLuint VertexArray;
 	glGenBuffers(1, &VertexBuffer);
@@ -290,7 +290,7 @@ int main()
 	texSampler = glGetUniformLocation(shader, "t3");
 	glUniform1i(texSampler, 3);
 
-    texSampler = glGetUniformLocation(shader, "randTex");
+	texSampler = glGetUniformLocation(shader, "randTex");
 	glUniform1i(texSampler, 4);
 
 
@@ -320,26 +320,28 @@ int main()
 	p[23] = (float)rand();
 	*/
 	VertexArray = SetupVertexArray(g_vertex_buffer_data, sizeof(g_vertex_buffer_data));
-	GLuint* resultframe = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*sizeof(GLuint)];
+	GLuint* resultframe = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
 	int r0 = 0;
 	int r1 = 0;
 	int r2 = 0;
 	int r3 = 0;
 	int l = 0;
-//	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
-	//glDrawBuffers(4, DrawBuffers);
+	//	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
+		//glDrawBuffers(4, DrawBuffers);
 	auto error = glGetError();
+	int i = 0;
 	while (1) {
 		FlipTextures();
-	//	auto error = glGetError();
-		//glUnmapBuffer(GL_ARRAY_BUFFER);
-	//	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
-		//glClear(GL_COLOR_BUFFER_BIT);
+		//	auto error = glGetError();
+			//glUnmapBuffer(GL_ARRAY_BUFFER);
+		//	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
+			//glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-
+		i++;
+		if (i > 300) return 0;
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		//glfwPollEvents();
-		printf("printing pixels of FB %d\n", activeFBO);
+/*		printf("printing pixels of FB %d\n", activeFBO);
 		//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
 	//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
 		int i = 0;
@@ -359,7 +361,7 @@ int main()
 			glReadBuffer(GL_COLOR_ATTACHMENT4);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, resultframe);
 			printf("rand: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
-			getchar();
+			getchar();*/
 			//if (resultframe[i] == 0) r0++;
 			//if (resultframe[i] == 1) r1++;
 		//	if (resultframe[i] == 2) r2++;
@@ -368,7 +370,7 @@ int main()
 			//	printf("fail\n");
 	//	}
 
-		glfwSwapBuffers(window);
+		//glfwSwapBuffers(window);
 		//if ((++l % 1000) == 0)
 	//	printf("Res won no change: %d  won change: %d total %d\n", r1, r2, r1 + r2);
 
