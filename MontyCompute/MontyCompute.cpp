@@ -338,7 +338,7 @@ int main()
 			//glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		i++;
-		if (i > 300) return 0;
+		if ((i % 1000) == 0) printf("Generated %d frames\n", i);
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		//glfwPollEvents();
 /*		printf("printing pixels of FB %d\n", activeFBO);
