@@ -42,6 +42,13 @@ const GLchar* fragShader =
 "uniform usampler2D t2;\n"\
 "uniform usampler2D t3;\n"\
 "uniform isampler2D randTex;\n"\
+"uint xorsh(uint rnd)\n"\
+"{\n"\
+"	rnd ^= (rnd << 13);\n"\
+"	rnd ^= (rnd >> 17);\n"\
+"	rnd ^= (rnd << 5);\n"\
+"	return rnd;\n"\
+"}\n"\
 
 "int wang_hash(int seed)\n"\
 "{\n"\
