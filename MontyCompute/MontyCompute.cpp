@@ -43,6 +43,7 @@ const GLchar* fragShader =
 "uniform usampler2D t2;\n"\
 "uniform usampler2D t3;\n"\
 "uniform isampler2D randTex;\n"\
+/*
 "int xorsh(int rnd)\n"\
 "{\n"\
 "	rnd ^= (rnd << 13);\n"\
@@ -50,7 +51,7 @@ const GLchar* fragShader =
 "	rnd ^= (rnd << 5);\n"\
 "	return rnd;\n"\
 "}\n"\
-
+*/
 "int wang_hash(int seed)\n"\
 "{\n"\
 "	seed = (seed ^ 61) ^ (seed >> 16);\n"\
@@ -69,21 +70,29 @@ const GLchar* fragShader =
 "	uint doorsLostKept = texture(t2,uvOut).r;\n"\
 "	uint doorsLostChanged = texture(t3,uvOut).r;\n"\
 "	int rand1 = wang_hash(texture(randTex,uvOut).r);\n"\
+"	int rand2 = rand1 >> 8;\n"\
+"	int rand3 = rand2 >> 8;\n"\
+/*
 "	int rand2 = wang_hash(rand1);\n"\
 "	int rand3 = wang_hash(rand2);\n"\
+*/
 "	int chosenDoor = rand1 % 3;\n"\
 "	int correctDoor = rand2 % 3;\n"\
 "	int decision = rand3 % 2;\n"\
-"	int altDoor;\n"\
-"	int excludedDoor;\n"\
+"	int altDoor=0;\n"\
+"	int excludedDoor=0;\n"\
 
 "	if (decision == 0) { // Chose not to switch\n"\
 "		if (chosenDoor == correctDoor){ doorsWonKept++; }\n"\
 "		else { doorsLostKept++; }\n"\
 "	}\n"\
 "	else { // Chose to switch\n"\
-"		for (excludedDoor=0;excludedDoor==correctDoor || excludedDoor == chosenDoor;excludedDoor++);\n"\
-"		for (altDoor=0;altDoor == chosenDoor || altDoor == excludedDoor;altDoor++);\n"\
+
+"		if (excludedDoor==correctDoor || excludedDoor == chosenDoor) {excludedDoor++;}\n"\
+"		if (excludedDoor==correctDoor || excludedDoor == chosenDoor) {excludedDoor++;}\n"\
+"		if (altDoor == chosenDoor || altDoor == excludedDoor) {altDoor++;}\n"\
+"		if (altDoor == chosenDoor || altDoor == excludedDoor) {altDoor++;}\n"\
+
 "		if (altDoor == correctDoor){ doorsWonChanged++; }\n"\
 "		else { doorsLostChanged++; }\n"\
 "	\n"\
@@ -94,7 +103,7 @@ const GLchar* fragShader =
 "	c2 = doorsLostKept;\n"\
 "	c3 = doorsLostChanged;\n"\
 
-"	randOut = wang_hash(texture(randTex,uvOut).r);\n"\
+"	randOut = rand1;\n"\
 "}\n";
 
 //"res = samp;\n"\
