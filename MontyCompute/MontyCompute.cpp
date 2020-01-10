@@ -67,18 +67,18 @@ const GLchar* fragShader =
 "uint doorsWonChanged = uint(texture(t1,uvOut));\n"\
 "uint doorsLostKept = uint(texture(t2,uvOut));\n"\
 "uint doorsLostChanged = uint(texture(t3,uvOut));\n"\
-"int rand1 = wang_hash(int(texture(randTex,uvOut)));\n"\
-"int rand2 = wang_hash(rand1);\n"\
-"int rand3 = wang_hash(rand2);\n"\
-"int chosenDoor = rand1 % 3;\n"\
-"int correctDoor = rand2 % 3;\n"\
-"int decision = rand3 % 2;\n"\
+"uint rand1 = xorsh(uint(texture(randTex,uvOut)));\n"\
+"uint rand2 = xorsh(rand1);\n"\
+"uint rand3 = xorsh(rand2);\n"\
+"uint chosenDoor = rand1 % 3u;\n"\
+"uint correctDoor = rand2 % 3u;\n"\
+"uint decision = rand3 % 2u;\n"\
 "c0 = uint(chosenDoor);\n"\
 "c1 = uint(correctDoor);\n"\
 "c2 = uint(decision);\n"\
-"c3 = uint(wang_hash(int(s)));\n"\
+"c3 = 0u;//uint(wang_hash(int(s)));\n"\
 
-"randOut = wang_hash(rand3);\n"\
+"randOut = int(xorsh(rand3));\n"\
 //"res = samp;\n"\
 
 /*"int num = int(s);\n"\
@@ -348,7 +348,7 @@ int main()
 		if ((i % 1000) == 0) printf("Generated %d frames\n", i);
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		//glfwPollEvents();
-/*		printf("printing pixels of FB %d\n", activeFBO);
+	/*	printf("printing pixels of FB %d\n", activeFBO);
 		//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
 	//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
 		int i = 0;
