@@ -125,6 +125,7 @@ GLint* GenRandTex() {
 	static GLint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLint)];
 	static bool firstcall = true;
 	if (!firstcall) return buf;
+	printf("Generating blank texture\n");
 	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
 		buf[i] = rand();
 	}
@@ -135,6 +136,7 @@ GLuint* GenBlankTex() {
 	static GLuint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
 	static bool firstcall = true;
 	if (!firstcall) return buf;
+	printf("Generating random texture\n");
 	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
 		buf[i] = 0;
 	}
@@ -142,7 +144,7 @@ GLuint* GenBlankTex() {
 	return buf; // NOTE: as a static, this is legal, although obviously not thread safe
 }
 void SetupFramebuffers() {
-
+	printf("Configuring framebuffers\n");
 	glGenFramebuffers(2, framebuffers);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[0]);
@@ -207,7 +209,7 @@ GLuint SetupShader(const GLchar* const* buf, GLenum type) {
 void SetupTextures() {
 	GenRandTex();
 	glActiveTexture(GL_TEXTURE0);
-
+	printf("Uploading texture data to GPU\n");
 	for (int i = 0; i < 2; i++) {
 		glBindTexture(GL_TEXTURE_2D, randTex[i]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_INT, GenRandTex());
@@ -224,6 +226,7 @@ void SetupTextures() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 GLuint SetupVertexArray(GLfloat* buf, GLuint len) {
+	printf("Uploading vertex data to GPU\n");
 	GLuint VertexBuffer;
 	GLuint VertexArray;
 	glGenBuffers(1, &VertexBuffer);
@@ -292,7 +295,8 @@ int main()
 		//}
 
 		//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
+	printf("OpenGL renderer: %s\n", glGetString(GL_RENDERER));
+	printf("Compiling shaders\n");
 	VertexShader = SetupShader(&vertShader, GL_VERTEX_SHADER);
 	FragmentShader = SetupShader(&fragShader, GL_FRAGMENT_SHADER);
 	GLchar data[512];
@@ -307,6 +311,7 @@ int main()
 	glBindFragDataLocation(shader, 2, "c2");
 	glBindFragDataLocation(shader, 3, "c3");
 	glBindFragDataLocation(shader, 4, "randOut");
+	printf("Linking shaders\n");
 	glLinkProgram(shader);
 
 	glGetProgramInfoLog(shader, sizeof(data), NULL, data);
@@ -314,7 +319,7 @@ int main()
 	if (glGetError() != GL_NO_ERROR) exit(-1);
 
 	glUseProgram(shader);
-
+	printf("Configuring shader samplers\n");
 	GLint texSampler = glGetUniformLocation(shader, "t0");
 	glUniform1i(texSampler, 0);
 	texSampler = glGetUniformLocation(shader, "t1");
@@ -375,6 +380,7 @@ int main()
 	int l;
 	int k;
 	time_t timeElapsed;
+	printf("Entering render loop\n\n");
 	while (1) {
 		FlipTextures();
 		//	auto error = glGetError();
@@ -387,7 +393,7 @@ int main()
 		totalDoorsWonChanged = 0;
 		totalDoorsLostKept = 0;
 		totalDoorsLostChanged = 0;
-		if ((i % 1000) == 0) {
+		if ((i % 200) == 0) {
 			timeElapsed = time(NULL) - startTime;
 			printf("Rendered %d frames (%d fps), downloading current results from gpu...\n", i, i / timeElapsed);
 			//glBindTexture(GL_TEXTURE_2D, 0);
@@ -414,7 +420,7 @@ int main()
 				totalDoorsLostKept += doorsLostKept[l];
 			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
 				totalDoorsLostChanged += doorsLostChanged[l];
-
+			
 			printf("Total doors won without changing: %lu\n", totalDoorsWonKept);
 			printf("Total doors won with changing: %lu\n", totalDoorsWonChanged);
 			printf("Total doors lost without changing: %lu\n", totalDoorsLostKept);
@@ -422,7 +428,7 @@ int main()
 
 			printf("Total games played: %lu\n", totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged);
 			printf("Games per second: %d\n", (totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged) / timeElapsed);
-			printf("Debug:\n");
+			printf("Debug data (first 10 pixels):\n");
 			printf("doorsWonKept:\t\t");
 			for (k = 0; k < 10; k++) printf("%d ", doorsWonKept[k]);
 			printf("\ndoorsWonChanged:\t");
@@ -433,7 +439,7 @@ int main()
 			for (k = 0; k < 10; k++) printf("%d ", doorsLostChanged[k]);
 			printf("\nrandTex: ");
 			for (k = 0; k < 10; k++) printf("%d ", randTex[k]);
-			printf("\n");
+			printf("\n\n");
 		}
 	//	}
 		/*	glReadBuffer(GL_COLOR_ATTACHMENT4);
