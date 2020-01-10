@@ -73,10 +73,14 @@ const GLchar* fragShader =
 "uint chosenDoor = rand1 % 3u;\n"\
 "uint correctDoor = rand2 % 3u;\n"\
 "uint decision = rand3 % 2u;\n"\
-"c0 = uint(chosenDoor);\n"\
-"c1 = uint(correctDoor);\n"\
-"c2 = uint(decision);\n"\
-"c3 = 0u;//uint(wang_hash(int(s)));\n"\
+"if (decision == 0u) { // Chose not to switch\n"\
+"if (chosenDoor == correctDoor){\n"\
+"doorsWonKept++;}\n"\
+"else {doorsLostKept++;}}\n"\
+"c0 = doorsWonKept;\n"\
+"c1 = doorsWonChanged;\n"\
+"c2 = doorsLostKept;\n"\
+"c3 = doorsLostChanged;\n"\
 
 "randOut = int(xorsh(rand3));\n"\
 //"res = samp;\n"\
@@ -348,7 +352,7 @@ int main()
 		if ((i % 1000) == 0) printf("Generated %d frames\n", i);
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		//glfwPollEvents();
-	/*	printf("printing pixels of FB %d\n", activeFBO);
+		printf("printing pixels of FB %d\n", activeFBO);
 		//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
 	//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
 		int i = 0;
@@ -368,7 +372,7 @@ int main()
 			glReadBuffer(GL_COLOR_ATTACHMENT4);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, resultframe);
 			printf("rand: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
-			getchar();*/
+			getchar();
 			//if (resultframe[i] == 0) r0++;
 			//if (resultframe[i] == 1) r1++;
 		//	if (resultframe[i] == 2) r2++;
@@ -377,7 +381,7 @@ int main()
 			//	printf("fail\n");
 	//	}
 
-		//glfwSwapBuffers(window);
+		glfwSwapBuffers(window);
 		//if ((++l % 1000) == 0)
 	//	printf("Res won no change: %d  won change: %d total %d\n", r1, r2, r1 + r2);
 
