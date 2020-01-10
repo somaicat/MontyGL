@@ -42,7 +42,7 @@ const GLchar* fragShader =
 "uniform usampler2D t2;\n"\
 "uniform usampler2D t3;\n"\
 "uniform isampler2D randTex;\n"\
-"uint xorsh(uint rnd)\n"\
+"int xorsh(int rnd)\n"\
 "{\n"\
 "	rnd ^= (rnd << 13);\n"\
 "	rnd ^= (rnd >> 17);\n"\
@@ -63,25 +63,26 @@ const GLchar* fragShader =
 "void main()\n"\
 "{\n"\
 
-"	uint doorsWonKept = uint(texture(t0,uvOut));\n"\
-"	uint doorsWonChanged = uint(texture(t1,uvOut));\n"\
-"	uint doorsLostKept = uint(texture(t2,uvOut));\n"\
-"	uint doorsLostChanged = uint(texture(t3,uvOut));\n"\
-"	uint rand1 = xorsh(uint(texture(randTex,uvOut)));\n"\
-"	uint rand2 = xorsh(rand1);\n"\
-"	uint rand3 = xorsh(rand2);\n"\
-"	uint chosenDoor = rand1 % 3u;\n"\
-"	uint correctDoor = rand2 % 3u;\n"\
-"	uint decision = rand3 % 2u;\n"\
-"	uint altDoor;\n"\
-"	uint excludedDoor;\n"\
-"	if (decision == 0u) { // Chose not to switch\n"\
+"	uint doorsWonKept = texture(t0,uvOut).r;\n"\
+"	uint doorsWonChanged = texture(t1,uvOut).r;\n"\
+"	uint doorsLostKept = texture(t2,uvOut).r;\n"\
+"	uint doorsLostChanged = texture(t3,uvOut).r;\n"\
+"	int rand1 = xorsh(texture(randTex,uvOut).r);\n"\
+"	int rand2 = xorsh(rand1);\n"\
+"	int rand3 = xorsh(rand2);\n"\
+"	int chosenDoor = rand1 % 3;\n"\
+"	int correctDoor = rand2 % 3;\n"\
+"	int decision = rand3 % 2;\n"\
+"	int altDoor;\n"\
+"	int excludedDoor;\n"\
+
+"	if (decision == 0) { // Chose not to switch\n"\
 "		if (chosenDoor == correctDoor){ doorsWonKept++; }\n"\
 "		else { doorsLostKept++; }\n"\
 "	}\n"\
 "	else { // Chose to switch\n"\
-"		for (excludedDoor=0u;excludedDoor==correctDoor || excludedDoor == chosenDoor;excludedDoor++);\n"\
-"		for (altDoor=0u;altDoor == chosenDoor || altDoor == excludedDoor;altDoor++);\n"\
+"		for (excludedDoor=0;excludedDoor==correctDoor || excludedDoor == chosenDoor;excludedDoor++);\n"\
+"		for (altDoor=0;altDoor == chosenDoor || altDoor == excludedDoor;altDoor++);\n"\
 "		if (altDoor == correctDoor){ doorsWonChanged++; }\n"\
 "		else { doorsLostChanged++; }\n"\
 "	\n"\
@@ -92,7 +93,7 @@ const GLchar* fragShader =
 "	c2 = doorsLostKept;\n"\
 "	c3 = doorsLostChanged;\n"\
 
-"	randOut = int(xorsh(rand3));\n"\
+"	randOut = wang_hash(texture(randTex,uvOut).r);\n"\
 "}\n";
 
 //"res = samp;\n"\
@@ -125,6 +126,16 @@ GLint* GenRandTex() {
 	if (!firstcall) return buf;
 	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
 		buf[i] = rand();
+	}
+	firstcall = false;
+	return buf; // NOTE: as a static, this is legal, although obviously not thread safe
+}
+GLuint* GenBlankTex() {
+	static GLuint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
+	static bool firstcall = true;
+	if (!firstcall) return buf;
+	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
+		buf[i] = 0;
 	}
 	firstcall = false;
 	return buf; // NOTE: as a static, this is legal, although obviously not thread safe
@@ -203,7 +214,7 @@ void SetupTextures() {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		for (int v = 0; v < 4; v++) {
 			glBindTexture(GL_TEXTURE_2D, renderedTexture[i][v]);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, GenBlankTex());
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		}
@@ -346,6 +357,7 @@ int main()
 	GLuint* doorsWonChanged = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
 	GLuint* doorsLostKept = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
 	GLuint* doorsLostChanged = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
+	GLint* randTex = new GLint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLint)];
 	unsigned long totalDoorsWonKept = 0;
 	unsigned long totalDoorsWonChanged = 0;
 	unsigned long totalDoorsLostKept = 0;
@@ -359,6 +371,7 @@ int main()
 	auto error = glGetError();
 	int i = 0;
 	int l;
+	int k;
 	while (1) {
 		FlipTextures();
 		//	auto error = glGetError();
@@ -367,7 +380,11 @@ int main()
 			//glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		i++;
-		if ((i % 1000) == 0) {
+		totalDoorsWonKept = 0;
+		totalDoorsWonChanged = 0;
+		totalDoorsLostKept = 0;
+		totalDoorsLostChanged = 0;
+		if ((i % 100) == 0) {
 			printf("Rendered %d frames, downloading current results from gpu...\n", i);
 
 			//glBindTexture(GL_TEXTURE_2D, 0);
@@ -382,9 +399,11 @@ int main()
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, doorsLostKept);
 			glReadBuffer(GL_COLOR_ATTACHMENT3);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, doorsLostChanged);
+			glReadBuffer(GL_COLOR_ATTACHMENT4);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, randTex);
 			printf("Result textures downloaded from vram, parsing...\n");
 
-			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++) 
+			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
 				totalDoorsWonKept += doorsWonKept[l];
 			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
 				totalDoorsWonChanged += doorsWonChanged[l];
@@ -398,8 +417,21 @@ int main()
 			printf("Total doors lost without changing: %lu\n", totalDoorsLostKept);
 			printf("Total doors lost with changing: %lu\n", totalDoorsLostChanged);
 
-			printf("Total games played: %lu\n", totalDoorsWonKept+ totalDoorsWonChanged+ totalDoorsLostKept+totalDoorsLostChanged);
+			printf("Total games played: %lu\n", totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged);
+			printf("Debug:\n");
+			printf("doorsWonKept:\t\t");
+			for (k = 0; k < 10; k++) printf("%d ", doorsWonKept[k]);
+			printf("\ndoorsWonChanged:\t");
+			for (k = 0; k < 10; k++) printf("%d ", doorsWonChanged[k]);
+			printf("\ndoorsLostKept:\t\t");
+			for (k = 0; k < 10; k++) printf("%d ", doorsLostKept[k]);
+			printf("\ndoorsLostChanged:\t");
+			for (k = 0; k < 10; k++) printf("%d ", doorsLostChanged[k]);
+			printf("\nrandTex: ");
+			for (k = 0; k < 10; k++) printf("%d ", randTex[k]);
+			printf("\n");
 		}
+	//	}
 		/*	glReadBuffer(GL_COLOR_ATTACHMENT4);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, resultframe);
 			printf("rand: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);*/
