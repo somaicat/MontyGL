@@ -66,7 +66,7 @@ const GLchar* fragShader =
 "int chosenDoor = rand1 % 3;\n"\
 "int correctDoor = rand2 % 3;\n"\
 "int decision = rand3 % 2;\n"\
-"c0 = uint(chosenDoor);\n"\
+"c0 = uint(wang_hash(rand3));//uint(chosenDoor);\n"\
 "c1 = uint(correctDoor);\n"\
 "c2 = uint(decision);\n"\
 "c3 = uint(wang_hash(int(s)));\n"\
@@ -246,7 +246,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+//	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
 	window = glfwCreateWindow(1024, 1024, "MontyCompute", NULL, NULL);
 	glfwMakeContextCurrent(window);
@@ -330,6 +330,7 @@ int main()
 		//glDrawBuffers(4, DrawBuffers);
 	auto error = glGetError();
 	int i = 0;
+	getchar();
 	while (1) {
 		FlipTextures();
 		//	auto error = glGetError();
@@ -340,8 +341,8 @@ int main()
 		i++;
 		if ((i % 1000) == 0) printf("Generated %d frames\n", i);
 		//glBindTexture(GL_TEXTURE_2D, 0);
-		//glfwPollEvents();
-/*		printf("printing pixels of FB %d\n", activeFBO);
+		glfwPollEvents();
+		printf("printing pixels of FB %d\n", activeFBO);
 		//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
 	//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
 		int i = 0;
@@ -349,7 +350,7 @@ int main()
 		glReadBuffer(GL_COLOR_ATTACHMENT0);
 		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
 			printf("0: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
-			glReadBuffer(GL_COLOR_ATTACHMENT1);
+		/*	glReadBuffer(GL_COLOR_ATTACHMENT1);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
 			printf("1: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
 			glReadBuffer(GL_COLOR_ATTACHMENT2);
@@ -370,7 +371,7 @@ int main()
 			//	printf("fail\n");
 	//	}
 
-		//glfwSwapBuffers(window);
+		glfwSwapBuffers(window);
 		//if ((++l % 1000) == 0)
 	//	printf("Res won no change: %d  won change: %d total %d\n", r1, r2, r1 + r2);
 
