@@ -421,6 +421,7 @@ int main()
 			printf("Total doors lost with changing: %lu\n", totalDoorsLostChanged);
 
 			printf("Total games played: %lu\n", totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged);
+			printf("Games per second: %d\n", (totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged) / timeElapsed);
 			printf("Debug:\n");
 			printf("doorsWonKept:\t\t");
 			for (k = 0; k < 10; k++) printf("%d ", doorsWonKept[k]);
