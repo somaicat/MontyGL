@@ -67,9 +67,9 @@ const GLchar* fragShader =
 "	uint doorsWonChanged = texture(t1,uvOut).r;\n"\
 "	uint doorsLostKept = texture(t2,uvOut).r;\n"\
 "	uint doorsLostChanged = texture(t3,uvOut).r;\n"\
-"	int rand1 = xorsh(texture(randTex,uvOut).r);\n"\
-"	int rand2 = xorsh(rand1);\n"\
-"	int rand3 = xorsh(rand2);\n"\
+"	int rand1 = wang_hash(texture(randTex,uvOut).r);\n"\
+"	int rand2 = wang_hash(rand1);\n"\
+"	int rand3 = wang_hash(rand2);\n"\
 "	int chosenDoor = rand1 % 3;\n"\
 "	int correctDoor = rand2 % 3;\n"\
 "	int decision = rand3 % 2;\n"\
@@ -401,7 +401,7 @@ int main()
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, doorsLostChanged);
 			glReadBuffer(GL_COLOR_ATTACHMENT4);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, randTex);
-			printf("Result textures downloaded from vram, parsing...\n");
+			printf("Results downloaded from vram, parsing...\n");
 
 			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
 				totalDoorsWonKept += doorsWonKept[l];
