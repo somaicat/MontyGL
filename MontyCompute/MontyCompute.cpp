@@ -209,7 +209,6 @@ GLuint SetupShader(const GLchar* const* buf, GLenum type) {
 void SetupTextures() {
 	GenRandTex();
 	glActiveTexture(GL_TEXTURE0);
-	printf("Uploading texture data to GPU\n");
 	for (int i = 0; i < 2; i++) {
 		glBindTexture(GL_TEXTURE_2D, randTex[i]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_INT, GenRandTex());
@@ -224,9 +223,10 @@ void SetupTextures() {
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	printf("Uploaded texture data to GPU\n");
 }
 GLuint SetupVertexArray(GLfloat* buf, GLuint len) {
-	printf("Uploading vertex data to GPU\n");
 	GLuint VertexBuffer;
 	GLuint VertexArray;
 	glGenBuffers(1, &VertexBuffer);
@@ -261,6 +261,8 @@ GLuint SetupVertexArray(GLfloat* buf, GLuint len) {
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
+
+	printf("Uploaded vertex data to GPU\n");
 	return VertexArray;
 }
 int main()
@@ -296,7 +298,6 @@ int main()
 
 		//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	printf("OpenGL renderer: %s\n", glGetString(GL_RENDERER));
-	printf("Compiling shaders\n");
 	VertexShader = SetupShader(&vertShader, GL_VERTEX_SHADER);
 	FragmentShader = SetupShader(&fragShader, GL_FRAGMENT_SHADER);
 	GLchar data[512];
