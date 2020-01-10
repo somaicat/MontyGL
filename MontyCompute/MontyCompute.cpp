@@ -342,16 +342,23 @@ int main()
 	p[23] = (float)rand();
 	*/
 	VertexArray = SetupVertexArray(g_vertex_buffer_data, sizeof(g_vertex_buffer_data));
-	GLuint* resultframe = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
-	int r0 = 0;
+	GLuint* doorsWonKept = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
+	GLuint* doorsWonChanged = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
+	GLuint* doorsLostKept = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
+	GLuint* doorsLostChanged = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
+	unsigned long totalDoorsWonKept = 0;
+	unsigned long totalDoorsWonChanged = 0;
+	unsigned long totalDoorsLostKept = 0;
+	unsigned long totalDoorsLostChanged = 0;
+	int  r0 = 0;
 	int r1 = 0;
 	int r2 = 0;
 	int r3 = 0;
-	int l = 0;
 	//	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
 		//glDrawBuffers(4, DrawBuffers);
 	auto error = glGetError();
 	int i = 0;
+	int l;
 	while (1) {
 		FlipTextures();
 		//	auto error = glGetError();
@@ -360,30 +367,43 @@ int main()
 			//glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		i++;
-		if ((i % 1000) == 0) printf("Generated %d frames\n", i);
-		//glBindTexture(GL_TEXTURE_2D, 0);
-		//glfwPollEvents();
-		printf("Printing 4 pixels of FB %d\n", activeFBO);
-		//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
-	//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
-		int i = 0;
+		if ((i % 1000) == 0) {
+			printf("Rendered %d frames, downloading current results from gpu...\n", i);
 
-		glReadBuffer(GL_COLOR_ATTACHMENT0);
-		glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
-			printf("doorsWonKept: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
+			//glBindTexture(GL_TEXTURE_2D, 0);
+			//glfwPollEvents();
+			//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
+		//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
+			glReadBuffer(GL_COLOR_ATTACHMENT0);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, doorsWonKept);
 			glReadBuffer(GL_COLOR_ATTACHMENT1);
-			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
-			printf("doorsWonChanged: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, doorsWonChanged);
 			glReadBuffer(GL_COLOR_ATTACHMENT2);
-			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
-			printf("doorsLostKept: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, doorsLostKept);
 			glReadBuffer(GL_COLOR_ATTACHMENT3);
-			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, resultframe);
-			printf("doorsLostChanged: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
-			glReadBuffer(GL_COLOR_ATTACHMENT4);
+			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, doorsLostChanged);
+			printf("Result textures downloaded from vram, parsing...\n");
+
+			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++) 
+				totalDoorsWonKept += doorsWonKept[l];
+			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
+				totalDoorsWonChanged += doorsWonChanged[l];
+			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
+				totalDoorsLostKept += doorsLostKept[l];
+			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
+				totalDoorsLostChanged += doorsLostChanged[l];
+
+			printf("Total doors won without changing: %lu\n", totalDoorsWonKept);
+			printf("Total doors won with changing: %lu\n", totalDoorsWonChanged);
+			printf("Total doors lost without changing: %lu\n", totalDoorsLostKept);
+			printf("Total doors lost with changing: %lu\n", totalDoorsLostChanged);
+
+			printf("Total games played: %lu\n", totalDoorsWonKept+ totalDoorsWonChanged+ totalDoorsLostKept+totalDoorsLostChanged);
+		}
+		/*	glReadBuffer(GL_COLOR_ATTACHMENT4);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, resultframe);
-			printf("rand: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);
-			getchar();
+			printf("rand: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);*/
+			//getchar();
 			//if (resultframe[i] == 0) r0++;
 			//if (resultframe[i] == 1) r1++;
 		//	if (resultframe[i] == 2) r2++;
