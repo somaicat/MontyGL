@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include <stdlib.h>  
+#include <time.h>
 //const GLchar* fragShader =
 
 #define GL_MAX_TEXTURE_SIZE 1024
@@ -362,6 +363,7 @@ int main()
 	unsigned long totalDoorsWonChanged = 0;
 	unsigned long totalDoorsLostKept = 0;
 	unsigned long totalDoorsLostChanged = 0;
+	time_t startTime = time(NULL);
 	int  r0 = 0;
 	int r1 = 0;
 	int r2 = 0;
@@ -372,6 +374,7 @@ int main()
 	int i = 0;
 	int l;
 	int k;
+	time_t timeElapsed;
 	while (1) {
 		FlipTextures();
 		//	auto error = glGetError();
@@ -384,9 +387,9 @@ int main()
 		totalDoorsWonChanged = 0;
 		totalDoorsLostKept = 0;
 		totalDoorsLostChanged = 0;
-		if ((i % 100) == 0) {
-			printf("Rendered %d frames, downloading current results from gpu...\n", i);
-
+		if ((i % 1000) == 0) {
+			timeElapsed = time(NULL) - startTime;
+			printf("Rendered %d frames (%d fps), downloading current results from gpu...\n", i, i / timeElapsed);
 			//glBindTexture(GL_TEXTURE_2D, 0);
 			//glfwPollEvents();
 			//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
