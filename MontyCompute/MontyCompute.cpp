@@ -63,26 +63,28 @@ const GLchar* fragShader =
 "void main()\n"\
 "{\n"\
 
-"uint doorsWonKept = uint(texture(t0,uvOut));\n"\
-"uint doorsWonChanged = uint(texture(t1,uvOut));\n"\
-"uint doorsLostKept = uint(texture(t2,uvOut));\n"\
-"uint doorsLostChanged = uint(texture(t3,uvOut));\n"\
-"uint rand1 = xorsh(uint(texture(randTex,uvOut)));\n"\
-"uint rand2 = xorsh(rand1);\n"\
-"uint rand3 = xorsh(rand2);\n"\
-"uint chosenDoor = rand1 % 3u;\n"\
-"uint correctDoor = rand2 % 3u;\n"\
-"uint decision = rand3 % 2u;\n"\
-"if (decision == 0u) { // Chose not to switch\n"\
-"if (chosenDoor == correctDoor){\n"\
-"doorsWonKept++;}\n"\
-"else {doorsLostKept++;}}\n"\
-"c0 = doorsWonKept;\n"\
-"c1 = doorsWonChanged;\n"\
-"c2 = doorsLostKept;\n"\
-"c3 = doorsLostChanged;\n"\
+"	uint doorsWonKept = uint(texture(t0,uvOut));\n"\
+"	uint doorsWonChanged = uint(texture(t1,uvOut));\n"\
+"	uint doorsLostKept = uint(texture(t2,uvOut));\n"\
+"	uint doorsLostChanged = uint(texture(t3,uvOut));\n"\
+"	uint rand1 = xorsh(uint(texture(randTex,uvOut)));\n"\
+"	uint rand2 = xorsh(rand1);\n"\
+"	uint rand3 = xorsh(rand2);\n"\
+"	uint chosenDoor = rand1 % 3u;\n"\
+"	uint correctDoor = rand2 % 3u;\n"\
+"	uint decision = rand3 % 2u;\n"\
+"	if (decision == 0u) { // Chose not to switch\n"\
+"		if (chosenDoor == correctDoor){\n"\
+"		doorsWonKept++;}\n"\
+"		else {doorsLostKept++;}}\n"\
+"	c0 = doorsWonKept;\n"\
+"	c1 = doorsWonChanged;\n"\
+"	c2 = doorsLostKept;\n"\
+"	c3 = doorsLostChanged;\n"\
 
-"randOut = int(xorsh(rand3));\n"\
+"	randOut = int(xorsh(rand3));\n"\
+"}\n";
+
 //"res = samp;\n"\
 
 /*"int num = int(s);\n"\
@@ -93,7 +95,6 @@ const GLchar* fragShader =
 "if (correctdoor == chosendoor) r = r + 1;\n"\
 "if (decision == 1) r = r + 2;\n"\
 "	res = r;\n"\*/
-"}\n";
 GLfloat g_vertex_buffer_data[] = {
    -1.0f, -1.0f, 0.0f, 100.0f,0.0f,0.0f,
 	1.0f, -1.0f, 0.0f, 20000.0f,1.0f,0.0f,
