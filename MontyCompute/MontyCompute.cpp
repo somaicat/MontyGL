@@ -12,6 +12,9 @@
 #include <time.h>
 //const GLchar* fragShader =
 
+#define CLEARSCR "\033[2J"
+#define ZEROCURSOR "\033[H"
+
 #define GL_MAX_TEXTURE_SIZE 1024
 const GLchar * vertShader =
 "#version 140\n"\
@@ -405,6 +408,7 @@ int main()
 		totalDoorsLostChanged = 0;
 		if ((i % 200) == 0) {
 			timeElapsed = time(NULL) - startTime;
+			printf("%s%s", CLEARSCR, ZEROCURSOR);
 			printf("Rendered %d frames (%d fps), downloading current results from gpu...\n", i, i / timeElapsed);
 			//glBindTexture(GL_TEXTURE_2D, 0);
 			//glfwPollEvents();
@@ -420,7 +424,7 @@ int main()
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, doorsLostChanged);
 			glReadBuffer(GL_COLOR_ATTACHMENT4);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, randTex);
-			printf("Results downloaded from vram, parsing...\n");
+			printf("Results downloaded from vram, parsing...\n\n");
 
 			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
 				totalDoorsWonKept += doorsWonKept[l];
@@ -430,24 +434,23 @@ int main()
 				totalDoorsLostKept += doorsLostKept[l];
 			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
 				totalDoorsLostChanged += doorsLostChanged[l];
-			
-			printf("Total doors won without changing: %lu\n", totalDoorsWonKept);
-			printf("Total doors won with changing: %lu\n", totalDoorsWonChanged);
-			printf("Total doors lost without changing: %lu\n", totalDoorsLostKept);
-			printf("Total doors lost with changing: %lu\n", totalDoorsLostChanged);
+			printf("Games switching: %lu wins %lu lose\n", totalDoorsWonKept, totalDoorsLostKept);
+			printf("Games switching: %lu wins %lu lose\n", totalDoorsWonChanged, totalDoorsLostChanged);
+			printf("Odds keeping: %f\n", ((double) totalDoorsWonKept / (totalDoorsWonKept + totalDoorsLostKept)) * 100.0f);
+			printf("Odds switching: %f\n", ((double) totalDoorsWonChanged / (totalDoorsWonChanged + totalDoorsLostChanged)) * 100.0f);
 
 			printf("Total games played: %lu\n", totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged);
 			printf("Games per second: %d\n", (totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged) / timeElapsed);
-			printf("Debug data (first 10 pixels):\n");
-			printf("doorsWonKept:\t\t");
+			printf("\nDebug data (first 10 pixels):\n");
+			printf("WonKeptPixels:\t\t");
 			for (k = 0; k < 10; k++) printf("%d ", doorsWonKept[k]);
-			printf("\ndoorsWonChanged:\t");
+			printf("\nWonSwitchedPixels:\t");
 			for (k = 0; k < 10; k++) printf("%d ", doorsWonChanged[k]);
-			printf("\ndoorsLostKept:\t\t");
+			printf("\nLostKeptPixels:\t\t");
 			for (k = 0; k < 10; k++) printf("%d ", doorsLostKept[k]);
-			printf("\ndoorsLostChanged:\t");
+			printf("\nLostSwitchedPixels:\t");
 			for (k = 0; k < 10; k++) printf("%d ", doorsLostChanged[k]);
-			printf("\nrandTex: ");
+			printf("\nRandTexPixels: ");
 			for (k = 0; k < 10; k++) printf("%d ", randTex[k]);
 			printf("\n\n");
 		}
