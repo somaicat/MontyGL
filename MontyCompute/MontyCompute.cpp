@@ -11,6 +11,8 @@
 #include <stdlib.h>  
 #include <time.h>
 
+#define FRAGSHADER fragShader
+
 #define CLEARSCR "\033[2J"
 #define ZEROCURSOR "\033[H"
 
@@ -26,6 +28,42 @@ const GLchar * vertShader =
 "	gl_Position.xyz = pos;\n"\
 "   gl_Position.w = 1.0;\n"\
 "   uvOut = uv;\n"\
+"}\n";
+const GLchar* randOnlyShader =
+"#version 140\n"\
+"in vec2 uvOut;\n"
+"out uint c0;\n"\
+"out uint c1;\n"\
+"out uint c2;\n"\
+"out uint c3;\n"\
+"out int randOut;\n"\
+
+"uniform usampler2D t0;\n"\
+"uniform usampler2D t1;\n"\
+"uniform usampler2D t2;\n"\
+"uniform usampler2D t3;\n"\
+"uniform isampler2D randTex;\n"\
+
+"int wang_hash(int seed)\n"\
+"{\n"\
+"	seed = (seed ^ 61) ^ (seed >> 16);\n"\
+"	seed *= 9;\n"\
+"	seed = seed ^ (seed >> 4);\n"\
+"	seed *= 0x27d4eb2d;\n"\
+"	seed = seed ^ (seed >> 15);\n"\
+"	return seed;\n"\
+"}\n"\
+
+"void main()\n"\
+"{\n"\
+"	int rand1 = wang_hash(texture(randTex,uvOut).r);\n"\
+
+"	c0 = 0u;\n"\
+"	c1 = 0u;\n"\
+"	c2 = 0u;\n"\
+"	c3 = 0u;\n"\
+
+"	randOut = rand1;\n"\
 "}\n";
 const GLchar* fragShader =
 "#version 140\n"\
@@ -96,6 +134,8 @@ const GLchar* fragShader =
 "	\n"\
 "	\n"\
 "	}\n"\
+
+
 "	c0 = doorsWonKept;\n"\
 "	c1 = doorsWonChanged;\n"\
 "	c2 = doorsLostKept;\n"\
@@ -251,7 +291,7 @@ GLuint SetupVertexArray(GLfloat* buf, GLuint len) {
 	printf("Uploaded vertex data to GPU\n");
 	return VertexArray;
 }
-int main()
+int main(int argc, char *argv[])
 {
 	GLFWwindow* window;
 	GLuint framebuffer = 0;
@@ -266,7 +306,6 @@ int main()
 		printf("GLFW3 failed to initalize\n");
 		return -1;
 	}
-
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -285,7 +324,7 @@ int main()
 
 	printf("OpenGL renderer: %s\n", glGetString(GL_RENDERER));
 	VertexShader = SetupShader(&vertShader, GL_VERTEX_SHADER);
-	FragmentShader = SetupShader(&fragShader, GL_FRAGMENT_SHADER);
+	FragmentShader = SetupShader(&FRAGSHADER, GL_FRAGMENT_SHADER);
 	GLchar data[512];
 	GLuint shader = glCreateProgram();
 	glAttachShader(shader, VertexShader);
@@ -380,7 +419,7 @@ int main()
 		if ((i % 200) == 0) {
 			timeElapsed = time(NULL) - startTime;
 			printf("%s%s", CLEARSCR, ZEROCURSOR);
-			printf("Rendered %d frames (%d fps), downloading current results from gpu...\n", i, i / timeElapsed);
+			printf("Rendered %d frames (%d fps), downloading current results from gpu...\n", i, (timeElapsed != 0) ? i / timeElapsed : 0);
 
 			//glfwPollEvents();
 
