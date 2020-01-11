@@ -434,7 +434,7 @@ int main()
 				totalDoorsLostKept += doorsLostKept[l];
 			for (l = 0; l < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; l++)
 				totalDoorsLostChanged += doorsLostChanged[l];
-			printf("Games switching: %lu wins %lu lose\n", totalDoorsWonKept, totalDoorsLostKept);
+			printf("Games keeping: %lu wins %lu lose\n", totalDoorsWonKept, totalDoorsLostKept);
 			printf("Games switching: %lu wins %lu lose\n", totalDoorsWonChanged, totalDoorsLostChanged);
 			printf("Odds keeping: %f\n", ((double) totalDoorsWonKept / (totalDoorsWonKept + totalDoorsLostKept)) * 100.0f);
 			printf("Odds switching: %f\n", ((double) totalDoorsWonChanged / (totalDoorsWonChanged + totalDoorsLostChanged)) * 100.0f);
