@@ -283,8 +283,9 @@ int main()
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-
+	
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE); // Double buffering will double the amount of video memory used... and since we're rendering off screen it's totally wasted. Attempt to disable.
 
 	window = glfwCreateWindow(1024, 1024, "MontyCompute", NULL, NULL);
 	glfwMakeContextCurrent(window);
@@ -296,6 +297,7 @@ int main()
 		//}
 
 		//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	
 	printf("OpenGL renderer: %s\n", glGetString(GL_RENDERER));
 	VertexShader = SetupShader(&vertShader, GL_VERTEX_SHADER);
 	FragmentShader = SetupShader(&fragShader, GL_FRAGMENT_SHADER);
@@ -453,7 +455,7 @@ int main()
 			//	printf("fail\n");
 	//	}
 
-		glfwSwapBuffers(window);
+		//glfwSwapBuffers(window);
 		//if ((++l % 1000) == 0)
 	//	printf("Res won no change: %d  won change: %d total %d\n", r1, r2, r1 + r2);
 
