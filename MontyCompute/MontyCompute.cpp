@@ -10,7 +10,6 @@
 
 #include <stdlib.h>  
 #include <time.h>
-//const GLchar* fragShader =
 
 #define CLEARSCR "\033[2J"
 #define ZEROCURSOR "\033[H"
@@ -105,16 +104,6 @@ const GLchar* fragShader =
 "	randOut = rand1;\n"\
 "}\n";
 
-//"res = samp;\n"\
-
-/*"int num = int(s);\n"\
-"int decision = (num & 0xff)%2;\n"\
-"int correctdoor = ((num >> 8) & 0xff)%3;\n"\
-"int chosendoor = ((num >> 16) & 0xff)%3;\n"\
-"int r = 0;\n"\
-"if (correctdoor == chosendoor) r = r + 1;\n"\
-"if (decision == 1) r = r + 2;\n"\
-"	res = r;\n"\*/
 GLfloat g_vertex_buffer_data[] = {
    -1.0f, -1.0f, 0.0f, 0.0f,0.0f,
 	1.0f, -1.0f, 0.0f, 1.0f,0.0f,
@@ -186,8 +175,6 @@ void FlipTextures() {
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, randTex[activeFBO]);
 	//printf("Bound textures %d\n", activeFBO);
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, renderedTexture)
 	if (activeFBO == 0)
 		activeFBO = 1;
 	else activeFBO = 0;
@@ -296,8 +283,6 @@ int main()
 		//	return -1;
 		//}
 
-		//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	
 	printf("OpenGL renderer: %s\n", glGetString(GL_RENDERER));
 	VertexShader = SetupShader(&vertShader, GL_VERTEX_SHADER);
 	FragmentShader = SetupShader(&fragShader, GL_FRAGMENT_SHADER);
@@ -384,10 +369,8 @@ int main()
 	printf("Entering render loop\n\n");
 	while (1) {
 		FlipTextures();
-		//	auto error = glGetError();
 			//glUnmapBuffer(GL_ARRAY_BUFFER);
 		//	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
-			//glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		i++;
 		totalDoorsWonKept = 0;
@@ -398,10 +381,9 @@ int main()
 			timeElapsed = time(NULL) - startTime;
 			printf("%s%s", CLEARSCR, ZEROCURSOR);
 			printf("Rendered %d frames (%d fps), downloading current results from gpu...\n", i, i / timeElapsed);
-			//glBindTexture(GL_TEXTURE_2D, 0);
+
 			//glfwPollEvents();
-			//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, resultframe);
-		//	for (int i = 0; i < (GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE*4); i=i+4) {
+
 			glReadBuffer(GL_COLOR_ATTACHMENT0);
 			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_UNSIGNED_INT, doorsWonKept);
 			glReadBuffer(GL_COLOR_ATTACHMENT1);
@@ -442,48 +424,8 @@ int main()
 			for (k = 0; k < 10; k++) printf("%d ", randTex[k]);
 			printf("\n\n");
 		}
-	//	}
-		/*	glReadBuffer(GL_COLOR_ATTACHMENT4);
-			glReadPixels(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, resultframe);
-			printf("rand: %u %u %u %u\n", resultframe[i], resultframe[i + 1], resultframe[i + 2], resultframe[i + 3]);*/
-			//getchar();
-			//if (resultframe[i] == 0) r0++;
-			//if (resultframe[i] == 1) r1++;
-		//	if (resultframe[i] == 2) r2++;
-			//if (resultframe[i] == 3) r3++;
-		//	if (resultframe[i] != 77)
-			//	printf("fail\n");
-	//	}
 
-		//glfwSwapBuffers(window);
-		//if ((++l % 1000) == 0)
-	//	printf("Res won no change: %d  won change: %d total %d\n", r1, r2, r1 + r2);
-
-		//		printf("Res = %.8x\n", resultframe[i]);
+		glfwSwapBuffers(window);
 	}
 
 }
-/*
-	if (device->GetFeatureLevel() < D3D_FEATURE_LEVEL_11_0)
-	{
-		D3D11_FEATURE_DATA_D3D10_X_HARDWARE_OPTIONS hwopts = { 0 };
-		(void)device->CheckFeatureSupport(D3D11_FEATURE_D3D10_X_HARDWARE_OPTIONS, &hwopts, sizeof(hwopts));
-		if (!hwopts.ComputeShaders_Plus_RawAndStructuredBuffers_Via_Shader_4_x)
-		{
-			printf("DirectCompute is not supported by this device\n");
-			return -1;
-		}
-	}*/
-
-
-
-	// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-	// Debug program: F5 or Debug > Start Debugging menu
-
-	// Tips for Getting Started: 
-	//   1. Use the Solution Explorer window to add/manage files
-	//   2. Use the Team Explorer window to connect to source control
-	//   3. Use the Output window to see build output and other messages
-	//   4. Use the Error List window to view errors
-	//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-	//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
