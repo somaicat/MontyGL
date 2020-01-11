@@ -19,9 +19,7 @@
 const GLchar * vertShader =
 "#version 140\n"\
 "in vec3 pos;\n"\
-"in float iseed;\n"\
 "in vec2 uv;\n"\
-"out float s;\n"\
 "out vec2 uvOut;\n"\
 
 "void main()\n"\
@@ -29,11 +27,9 @@ const GLchar * vertShader =
 "	gl_Position.xyz = pos;\n"\
 "   gl_Position.w = 1.0;\n"\
 "   uvOut = uv;\n"\
-"	s = iseed;\n"\
 "}\n";
 const GLchar* fragShader =
 "#version 140\n"\
-"in float s;\n"\
 "in vec2 uvOut;\n"
 "out uint c0;\n"\
 "out uint c1;\n"\
@@ -120,13 +116,13 @@ const GLchar* fragShader =
 "if (decision == 1) r = r + 2;\n"\
 "	res = r;\n"\*/
 GLfloat g_vertex_buffer_data[] = {
-   -1.0f, -1.0f, 0.0f, 100.0f,0.0f,0.0f,
-	1.0f, -1.0f, 0.0f, 20000.0f,1.0f,0.0f,
-	-1.0f,  1.0f, 0.0f, 34312.0f,0.0f,1.0f,
+   -1.0f, -1.0f, 0.0f, 0.0f,0.0f,
+	1.0f, -1.0f, 0.0f, 1.0f,0.0f,
+	-1.0f,  1.0f, 0.0f, 0.0f,1.0f,
 
-	-1.0f,  1.0f, 0.0f, 2653626.0f,0.0f,1.0f,
-	1.0f, -1.0f, 0.0f, 12363.0f,1.0f,0.0f,
-	1.0f,  1.0f, 0.0f, 1643.0f,1.0f,1.0f
+	-1.0f,  1.0f, 0.0f, 0.0f,1.0f,
+	1.0f, -1.0f, 0.0f, 1.0f,0.0f,
+	1.0f,  1.0f, 0.0f, 1.0f,1.0f
 };
 
 GLuint renderedTexture[2][4];
@@ -247,32 +243,23 @@ GLuint SetupVertexArray(GLfloat* buf, GLuint len) {
 	glGenVertexArrays(1, &VertexArray);
 	glBindVertexArray(VertexArray);
 	glVertexAttribPointer(
-		0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+		0,                  // attribute 0
 		3,                  // size
 		GL_FLOAT,           // type
 		GL_FALSE,           // normalized?
-		6 * sizeof(float),                  // stride
+		5 * sizeof(float),                  // stride
 		(GLvoid*)(0 * sizeof(GL_FLOAT))            // array buffer offset
 	);
 	glVertexAttribPointer(
-		1,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-		1,                  // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		6 * sizeof(float),                  // stride
-		(GLvoid*)(3 * sizeof(GL_FLOAT))           // array buffer offset
-	);
-	glVertexAttribPointer(
-		2,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+		1,                  // attribute 1
 		2,                  // size
 		GL_FLOAT,           // type
 		GL_FALSE,           // normalized?
-		6 * sizeof(float),                  // stride
-		(GLvoid*)(4 * sizeof(GL_FLOAT))           // array buffer offset
+		5 * sizeof(float),                  // stride
+		(GLvoid*)(3 * sizeof(GL_FLOAT))           // array buffer offset
 	);
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
 
 	printf("Uploaded vertex data to GPU\n");
 	return VertexArray;
@@ -317,8 +304,7 @@ int main()
 	glAttachShader(shader, VertexShader);
 	glAttachShader(shader, FragmentShader);
 	glBindAttribLocation(shader, 0, "pos");
-	glBindAttribLocation(shader, 1, "iseed");
-	glBindAttribLocation(shader, 2, "uv");
+	glBindAttribLocation(shader, 1, "uv");
 	glBindFragDataLocation(shader, 0, "c0");
 	glBindFragDataLocation(shader, 1, "c1");
 	glBindFragDataLocation(shader, 2, "c2");
