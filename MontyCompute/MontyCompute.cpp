@@ -425,10 +425,10 @@ int main(int argc, char *argv[])
 		totalDoorsWonChanged = 0;
 		totalDoorsLostKept = 0;
 		totalDoorsLostChanged = 0;
-		if ((i % 200) == 0) {
+		if ((i % 1000) == 0) {
 			timeElapsed = time(NULL) - startTime;
-			printf("%s%s", CLEARSCR, ZEROCURSOR);
-			printf("Rendered %d frames (%d fps), downloading current results from gpu...\n", i, (timeElapsed != 0) ? i / timeElapsed : 0);
+			//printf("%s%s", CLEARSCR, ZEROCURSOR);
+			printf("%ld s: Rendered %d frames (%d fps), downloading current results from gpu...\n",timeElapsed, i, (timeElapsed != 0) ? i / timeElapsed : 0);
 
 			//glfwPollEvents();
 
