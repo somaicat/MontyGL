@@ -228,6 +228,7 @@ void FlipTextures() {
 }
 
 GLuint SetupShader(const GLchar* const* buf, GLenum type) {
+	GLuint failnum = 0;
 	GLchar data[512];
 	GLuint shader = glCreateShader(type);
 	const char* typeStr = (type == GL_VERTEX_SHADER) ? "vertex" : "fragment"; // quick and dirty solution to display type of shader in output.
@@ -237,8 +238,12 @@ GLuint SetupShader(const GLchar* const* buf, GLenum type) {
 	glGetShaderInfoLog(shader, sizeof(data), NULL, data);
 	printf("%s\n", data);
 	GLuint error;
-	if ((error = glGetError()) != GL_NO_ERROR)
+	if ((error = glGetError()) != GL_NO_ERROR) {
+
+		printf("Shader compile failed: %x\n", failnum);
+		getchar();
 		exit(-1);
+	}
 	return shader;
 }
 void SetupTextures() {
@@ -300,10 +305,11 @@ int main(int argc, char *argv[])
 	GLuint FragmentShader;
 	GLuint Shader;
 	int texNum = 0;
-
+	GLuint failnum = 0;
 	if (!glfwInit())
 	{
 		printf("GLFW3 failed to initalize\n");
+		getchar();
 		return -1;
 	}
 
@@ -341,7 +347,10 @@ int main(int argc, char *argv[])
 
 	glGetProgramInfoLog(shader, sizeof(data), NULL, data);
 	printf("%s\n", data);
-	if (glGetError() != GL_NO_ERROR) exit(-1);
+	if ((failnum = glGetError()) != GL_NO_ERROR) {
+		printf("Linking shaders failed %x\n",failnum);
+		getchar();
+		exit(-1); }
 
 	glUseProgram(shader);
 	printf("Configuring shader samplers\n");
