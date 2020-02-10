@@ -19,14 +19,14 @@
 #define GL_MAX_TEXTURE_SIZE 1024
 const GLchar * vertShader =
 "#version 140\n"\
-"in vec3 pos;\n"\
+"in vec2 pos;\n"\
 "in vec2 uv;\n"\
 "out vec2 uvOut;\n"\
 
 "void main()\n"\
 "{\n"\
-"	gl_Position.xyz = pos;\n"\
-"   gl_Position.w = 1.0;\n"\
+"	gl_Position.xy = pos;\n"\
+"   gl_Position.zw = vec2(0.0,1.0);\n"\
 "   uvOut = uv;\n"\
 "}\n";
 const GLchar* randOnlyShader = // Provided for future benchmarking setting where only the randomization is done but with no games played.
@@ -151,13 +151,12 @@ const GLchar* fragShader = // The code that plays the actual games on the graphi
 */
 // Simple vertex data defining a single full size quad in normalized device coordinates. Along with the appropriate texture UV values for sampling.
 GLfloat g_vertex_buffer_data[] = {
-   -1.0f, -1.0f, 0.0f, 0.0f,0.0f,
-	1.0f, -1.0f, 0.0f, 1.0f,0.0f,
-	-1.0f,  1.0f, 0.0f, 0.0f,1.0f,
-
-	-1.0f,  1.0f, 0.0f, 0.0f,1.0f,
-	1.0f, -1.0f, 0.0f, 1.0f,0.0f,
-	1.0f,  1.0f, 0.0f, 1.0f,1.0f
+   -1.0f, -1.0f, 0.0f,0.0f,
+	1.0f, -1.0f, 1.0f,0.0f,
+	-1.0f,  1.0f, 0.0f,1.0f,
+	-1.0f,  1.0f, 0.0f,1.0f,
+	1.0f, -1.0f, 1.0f,0.0f,
+	1.0f,  1.0f, 1.0f,1.0f
 };
 
 GLuint renderedTexture[2][4];
@@ -282,10 +281,10 @@ GLuint SetupVertexArray(GLfloat* buf, GLuint len) {
 	glBindVertexArray(VertexArray);
 	glVertexAttribPointer(
 		0,                  // attribute 0
-		3,                  // size
+		2,                  // size
 		GL_FLOAT,           // type
 		GL_FALSE,           // normalized
-		5 * sizeof(float),  // stride
+		4 * sizeof(float),  // stride
 		(GLvoid*)(0 * sizeof(GL_FLOAT)) // offset
 	);
 	glVertexAttribPointer(
@@ -293,8 +292,8 @@ GLuint SetupVertexArray(GLfloat* buf, GLuint len) {
 		2,                  // size
 		GL_FLOAT,           // type
 		GL_FALSE,           // normalized
-		5 * sizeof(float), // stride
-		(GLvoid*)(3 * sizeof(GL_FLOAT)) // offset
+		4 * sizeof(float), // stride
+		(GLvoid*)(2 * sizeof(GL_FLOAT)) // offset
 	);
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
