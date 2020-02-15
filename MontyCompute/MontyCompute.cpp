@@ -139,24 +139,22 @@ const GLchar* fragShader = // The code that plays the actual games on the graphi
 /*        Quad Definition
 		X Y U V       X Y U V
 	   -1,1,0,1       1,1,1,1
-			   +-----+
+			  2*-----*4
 			   |\    |
 			   | \   |
 			   |  \  |
 			   |   \ |
 			   |    \|
-			   +-----+
+			  1*-----*3
 	  -1,-1,0,0       1,-1,1,0
 	   X  Y U V       X  Y U V
 */
 // Simple vertex data defining a single full size quad in normalized device coordinates. Along with the appropriate texture UV values for sampling.
 GLfloat g_vertex_buffer_data[] = {
-   -1.0f, -1.0f, 0.0f,0.0f,
-	1.0f, -1.0f, 1.0f,0.0f,
-	-1.0f,  1.0f, 0.0f,1.0f,
-	-1.0f,  1.0f, 0.0f,1.0f,
-	1.0f, -1.0f, 1.0f,0.0f,
-	1.0f,  1.0f, 1.0f,1.0f
+   -1.0f, -1.0f, 0.0f, 0.0f,
+   -1.0f,  1.0f, 0.0f, 1.0f,
+	1.0f, -1.0f, 1.0f, 0.0f,
+	1.0f,  1.0f, 1.0f, 1.0f
 };
 
 GLuint renderedTexture[2][4];
@@ -402,7 +400,7 @@ int main(int argc, char *argv[])
 		FlipTextures();
 			//glUnmapBuffer(GL_ARRAY_BUFFER);
 		//	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		i++;
 		totalDoorsWonKept = 0;
 		totalDoorsWonChanged = 0;
