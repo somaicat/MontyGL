@@ -165,7 +165,7 @@ GLint* GenRandTex() {
 	static GLint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLint)];
 	static bool firstcall = true;
 	if (!firstcall) return buf;
-	printf("Generating blank texture\n");
+	printf("Generating random texture\n");
 	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
 		buf[i] = rand();
 	}
@@ -176,7 +176,7 @@ GLuint* GenBlankTex() {
 	static GLuint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
 	static bool firstcall = true;
 	if (!firstcall) return buf;
-	printf("Generating random texture\n");
+	printf("Generating blank texture\n");
 	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
 		buf[i] = 0;
 	}
