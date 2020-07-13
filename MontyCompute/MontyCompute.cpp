@@ -97,7 +97,7 @@ const GLchar* fragShader = // The code that plays the actual games on the graphi
 "	uint doorsWonChanged = texture(t1,uvOut).r;\n"\
 "	uint doorsLostKept = texture(t2,uvOut).r;\n"\
 "	uint doorsLostChanged = texture(t3,uvOut).r;\n"\
-"	int rand1 = wang_hash(texture(randTex,uvOut).r);\n"\
+"	int rand1 = texture(randTex,uvOut).r;\n"\
 "	int rand2 = rand1 >> 8; // Derive random numbers from portion of the first hashed value... hopefully a bit faster than getting multiple hashes\n"\
 "	int rand3 = rand2 >> 8;\n"\
 /*
@@ -164,10 +164,19 @@ GLuint activeFBO = 0;
 GLint* GenRandTex() {
 	static GLint buf[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLint)];
 	static bool firstcall = true;
-	if (!firstcall) return buf;
-	printf("Generating random texture\n");
+
+	if (firstcall) 
+		printf("Generating random texture\n");
+
 	for (int i = 0; i < GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE; i++) {
-		buf[i] = rand();
+		buf[i] = rand()*3;
+	}
+	if (!firstcall) {
+		//glActiveTexture(GL_TEXTURE4);
+		//glBindTexture(GL_TEXTURE_2D, randTex[activeFBO]);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, GL_RED_INTEGER, GL_INT, buf);
+
+		return buf;
 	}
 	firstcall = false;
 	return buf; // NOTE: as a static, this is legal, although obviously not thread safe
@@ -183,6 +192,7 @@ GLuint* GenBlankTex() {
 	firstcall = false;
 	return buf; // NOTE: as a static, this is legal, although obviously not thread safe
 }
+
 void SetupFramebuffers() {
 	printf("Configuring framebuffers\n");
 	glGenFramebuffers(2, framebuffers);
@@ -254,7 +264,7 @@ void SetupTextures() {
 	glActiveTexture(GL_TEXTURE0);
 	for (int i = 0; i < 2; i++) {
 		glBindTexture(GL_TEXTURE_2D, randTex[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_INT, GenRandTex());
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE, 0, GL_RED_INTEGER, GL_INT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		for (int v = 0; v < 4; v++) {
@@ -398,6 +408,8 @@ int main(int argc, char *argv[])
 	printf("Entering render loop\n\n");
 	while (1) {
 		FlipTextures();
+		GenRandTex();
+
 			//glUnmapBuffer(GL_ARRAY_BUFFER);
 		//	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -407,7 +419,7 @@ int main(int argc, char *argv[])
 		totalDoorsLostKept = 0;
 		totalDoorsLostChanged = 0;
 		totalGames = 0;
-		if ((i % 200) == 0) {
+		if ((i % 50) == 0) {
 			timeElapsed = time(NULL) - startTime;
 			//printf("%s%s", CLEARSCR, ZEROCURSOR);
 			printf("%lld s: Rendered %d frames (%d fps), downloading current results from gpu...\n",timeElapsed, i, (timeElapsed != 0) ? i / timeElapsed : 0);
