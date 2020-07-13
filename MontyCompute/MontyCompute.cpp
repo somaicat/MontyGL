@@ -19,17 +19,17 @@
 #define GL_MAX_TEXTURE_SIZE 1024
 const GLchar * vertShader =
 "#version 140\n"\
-"in vec3 pos;\n"\
+"in vec2 pos;\n"\
 "in vec2 uv;\n"\
 "out vec2 uvOut;\n"\
 
 "void main()\n"\
 "{\n"\
-"	gl_Position.xyz = pos;\n"\
-"   gl_Position.w = 1.0;\n"\
+"	gl_Position.xy = pos;\n"\
+"   gl_Position.zw = vec2(0.0,1.0);\n"\
 "   uvOut = uv;\n"\
 "}\n";
-const GLchar* randOnlyShader =
+const GLchar* randOnlyShader = // Provided for future benchmarking setting where only the randomization is done but with no games played.
 "#version 140\n"\
 "in vec2 uvOut;\n"
 "out uint c0;\n"\
@@ -65,7 +65,7 @@ const GLchar* randOnlyShader =
 
 "	randOut = rand1;\n"\
 "}\n";
-const GLchar* fragShader =
+const GLchar* fragShader = // The code that plays the actual games on the graphics chip
 "#version 140\n"\
 "in vec2 uvOut;\n"
 "out uint c0;\n"\
@@ -79,15 +79,7 @@ const GLchar* fragShader =
 "uniform usampler2D t2;\n"\
 "uniform usampler2D t3;\n"\
 "uniform isampler2D randTex;\n"\
-/*
-"int xorsh(int rnd)\n"\
-"{\n"\
-"	rnd ^= (rnd << 13);\n"\
-"	rnd ^= (rnd >> 17);\n"\
-"	rnd ^= (rnd << 5);\n"\
-"	return rnd;\n"\
-"}\n"\
-*/
+
 "int wang_hash(int seed)\n"\
 "{\n"\
 "	seed = (seed ^ 61) ^ (seed >> 16);\n"\
@@ -106,7 +98,7 @@ const GLchar* fragShader =
 "	uint doorsLostKept = texture(t2,uvOut).r;\n"\
 "	uint doorsLostChanged = texture(t3,uvOut).r;\n"\
 "	int rand1 = wang_hash(texture(randTex,uvOut).r);\n"\
-"	int rand2 = rand1 >> 8;\n"\
+"	int rand2 = rand1 >> 8; // Derive random numbers from portion of the first hashed value... hopefully a bit faster than getting multiple hashes\n"\
 "	int rand3 = rand2 >> 8;\n"\
 /*
 "	int rand2 = wang_hash(rand1);\n"\
@@ -144,14 +136,25 @@ const GLchar* fragShader =
 "	randOut = rand1;\n"\
 "}\n";
 
+/*        Quad Definition
+		X Y U V       X Y U V
+	   -1,1,0,1       1,1,1,1
+			  2*-----*4
+			   |\    |
+			   | \   |
+			   |  \  |
+			   |   \ |
+			   |    \|
+			  1*-----*3
+	  -1,-1,0,0       1,-1,1,0
+	   X  Y U V       X  Y U V
+*/
+// Simple vertex data defining a single full size quad in normalized device coordinates. Along with the appropriate texture UV values for sampling.
 GLfloat g_vertex_buffer_data[] = {
-   -1.0f, -1.0f, 0.0f, 0.0f,0.0f,
-	1.0f, -1.0f, 0.0f, 1.0f,0.0f,
-	-1.0f,  1.0f, 0.0f, 0.0f,1.0f,
-
-	-1.0f,  1.0f, 0.0f, 0.0f,1.0f,
-	1.0f, -1.0f, 0.0f, 1.0f,0.0f,
-	1.0f,  1.0f, 0.0f, 1.0f,1.0f
+   -1.0f, -1.0f, 0.0f, 0.0f,
+   -1.0f,  1.0f, 0.0f, 1.0f,
+	1.0f, -1.0f, 1.0f, 0.0f,
+	1.0f,  1.0f, 1.0f, 1.0f
 };
 
 GLuint renderedTexture[2][4];
@@ -276,19 +279,19 @@ GLuint SetupVertexArray(GLfloat* buf, GLuint len) {
 	glBindVertexArray(VertexArray);
 	glVertexAttribPointer(
 		0,                  // attribute 0
-		3,                  // size
+		2,                  // size
 		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		5 * sizeof(float),                  // stride
-		(GLvoid*)(0 * sizeof(GL_FLOAT))            // array buffer offset
+		GL_FALSE,           // normalized
+		4 * sizeof(float),  // stride
+		(GLvoid*)(0 * sizeof(GL_FLOAT)) // offset
 	);
 	glVertexAttribPointer(
 		1,                  // attribute 1
 		2,                  // size
 		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		5 * sizeof(float),                  // stride
-		(GLvoid*)(3 * sizeof(GL_FLOAT))           // array buffer offset
+		GL_FALSE,           // normalized
+		4 * sizeof(float), // stride
+		(GLvoid*)(2 * sizeof(GL_FLOAT)) // offset
 	);
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -373,25 +376,7 @@ int main(int argc, char *argv[])
 	SetupTextures();
 	glViewport(0, 0, GL_MAX_TEXTURE_SIZE, GL_MAX_TEXTURE_SIZE);
 	SetupFramebuffers();
-	//glGenFramebuffers(1, &framebuffer);
-	//glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture[0], 0);
-	//if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-	//	return 0;
-	//}
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//auto errorone = glGetError();
-	//auto error = glGetError();
-//	glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
-	/*float* p = (float*)g_vertex_buffer_data;
-	p[3] = (float)rand();
-	p[7] = (float)rand();
-	p[11] = (float)rand(); THESE ARE WRONG
-	p[15] = (float)rand();
-	p[19] = (float)rand();
-	p[23] = (float)rand();
-	*/
+
 	VertexArray = SetupVertexArray(g_vertex_buffer_data, sizeof(g_vertex_buffer_data));
 	GLuint* doorsWonKept = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
 	GLuint* doorsWonChanged = new GLuint[GL_MAX_TEXTURE_SIZE * GL_MAX_TEXTURE_SIZE * sizeof(GLuint)];
@@ -402,13 +387,9 @@ int main(int argc, char *argv[])
 	unsigned long totalDoorsWonChanged = 0;
 	unsigned long totalDoorsLostKept = 0;
 	unsigned long totalDoorsLostChanged = 0;
+	unsigned long totalGames = 0;
 	time_t startTime = time(NULL);
-	int  r0 = 0;
-	int r1 = 0;
-	int r2 = 0;
-	int r3 = 0;
-	//	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
-		//glDrawBuffers(4, DrawBuffers);
+
 	auto error = glGetError();
 	int i = 0;
 	int l;
@@ -419,16 +400,17 @@ int main(int argc, char *argv[])
 		FlipTextures();
 			//glUnmapBuffer(GL_ARRAY_BUFFER);
 		//	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		i++;
 		totalDoorsWonKept = 0;
 		totalDoorsWonChanged = 0;
 		totalDoorsLostKept = 0;
 		totalDoorsLostChanged = 0;
+		totalGames = 0;
 		if ((i % 200) == 0) {
 			timeElapsed = time(NULL) - startTime;
-			printf("%s%s", CLEARSCR, ZEROCURSOR);
-			printf("Rendered %d frames (%d fps), downloading current results from gpu...\n", i, (timeElapsed != 0) ? i / timeElapsed : 0);
+			//printf("%s%s", CLEARSCR, ZEROCURSOR);
+			printf("%lld s: Rendered %d frames (%d fps), downloading current results from gpu...\n",timeElapsed, i, (timeElapsed != 0) ? i / timeElapsed : 0);
 
 			//glfwPollEvents();
 
@@ -454,11 +436,11 @@ int main(int argc, char *argv[])
 				totalDoorsLostChanged += doorsLostChanged[l];
 			printf("Games keeping: %lu wins %lu lose\n", totalDoorsWonKept, totalDoorsLostKept);
 			printf("Games switching: %lu wins %lu lose\n", totalDoorsWonChanged, totalDoorsLostChanged);
-			printf("Odds keeping: %f\n", ((double) totalDoorsWonKept / (totalDoorsWonKept + totalDoorsLostKept)) * 100.0f);
-			printf("Odds switching: %f\n", ((double) totalDoorsWonChanged / (totalDoorsWonChanged + totalDoorsLostChanged)) * 100.0f);
-
-			printf("Total games played: %lu\n", totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged);
-			printf("Games per second: %d\n", (totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged) / timeElapsed);
+			printf("Odds keeping: %f\n", ((double) totalDoorsWonKept / ((double)totalDoorsWonKept + (double)totalDoorsLostKept)) * 100.0f);
+			printf("Odds switching: %f\n", ((double) totalDoorsWonChanged / ((double)totalDoorsWonChanged + (double)totalDoorsLostChanged)) * 100.0f);
+			totalGames = (totalDoorsWonKept + totalDoorsWonChanged + totalDoorsLostKept + totalDoorsLostChanged);
+			printf("Total games played: %lu\n", totalGames);
+			printf("Games per second: %lld\n", (time_t) totalGames / timeElapsed);
 			printf("\nDebug data (first 10 pixels):\n");
 			printf("WonKeptPixels:\t\t");
 			for (k = 0; k < 10; k++) printf("%d ", doorsWonKept[k]);
